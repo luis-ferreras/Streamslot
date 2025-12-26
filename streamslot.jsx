@@ -7224,3 +7224,6 @@ function HelpContent() {
     </div>
   );
 }
+
+// Make Dashboard available globally
+window.Dashboard = Dashboard;
