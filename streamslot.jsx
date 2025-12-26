@@ -239,7 +239,7 @@ function Dashboard() {
     { name: 'Chiefs', city: 'Kansas City', abbr: 'KC', primary: '#E31837', secondary: '#FFB81C', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png' },
     { name: 'Raiders', city: 'Las Vegas', abbr: 'LV', primary: '#000000', secondary: '#A5ACAF', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lv.png' },
     { name: 'Chargers', city: 'Los Angeles', abbr: 'LAC', primary: '#0080C6', secondary: '#FFC20E', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lac.png' },
-    { name: 'Rams', city: 'Los Angeles', abbr: 'LAR', primary: '#003594', secondary: 'FF8200', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png' },
+    { name: 'Rams', city: 'Los Angeles', abbr: 'LAR', primary: '#003594', secondary: '#FF8200', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png' },
     { name: 'Dolphins', city: 'Miami', abbr: 'MIA', primary: '#008E97', secondary: '#FC4C02', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/mia.png' },
     { name: 'Vikings', city: 'Minnesota', abbr: 'MIN', primary: '#4F2683', secondary: '#FFC62F', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/min.png' },
     { name: 'Patriots', city: 'New England', abbr: 'NE', primary: '#002244', secondary: '#C60C30', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ne.png' },
