@@ -1971,8 +1971,8 @@ const tabs = [
                       src={team.logo} 
                       alt={team.name}
                       style={{
-                        width: squareBoxes ? '80%' : '90%',
-                        height: squareBoxes ? '80%' : '90%',
+                        width: squareBoxes ? '80%' : '70%',
+                        height: squareBoxes ? '80%' : '100%',
                         objectFit: squareBoxes ? 'contain' : 'cover',
                         opacity: isPurchased ? 0.3 : 1,
                         filter: isPurchased ? 'grayscale(100%)' : 'none'
@@ -2268,8 +2268,8 @@ const tabs = [
                         src={team.logo} 
                         alt={team.name}
                         style={{
-                          width: squareBoxes ? '80%' : '90%',
-                          height: squareBoxes ? '80%' : '90%',
+                          width: squareBoxes ? '80%' : '70%',
+                          height: squareBoxes ? '80%' : '100%',
                           objectFit: squareBoxes ? 'contain' : 'cover',
                           opacity: isPurchased ? 0.3 : 1,
                           filter: isPurchased ? 'grayscale(100%)' : 'none'
