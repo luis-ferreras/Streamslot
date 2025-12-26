@@ -1,6 +1,9 @@
 // StreamSlot - Professional Card Breaking Dashboard
 // CDN-compatible version for GitHub Pages
 
+// Make React hooks globally available
+const { useState, useRef, useEffect } = React;
+
 // Load saved state from localStorage
 const loadSavedState = () => {
   try {
@@ -17,9 +20,6 @@ const loadSavedState = () => {
 const savedState = loadSavedState();
 
 function Dashboard() {
-  // Destructure React hooks from global React object
-  const { useState, useRef, useEffect } = React;
-  
   // SPONSOR TOGGLE - Set to true to reveal sponsor sections
   const SHOW_SPONSOR = false; // Change to true when you have a sponsor
   
@@ -7225,5 +7225,3 @@ function HelpContent() {
   );
 }
 
-// Make Dashboard available globally
-window.Dashboard = Dashboard;
