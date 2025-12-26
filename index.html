@@ -51,23 +51,26 @@
   <!-- Dashboard Component - using absolute path -->
   <script type="text/babel" src="./streamslot.jsx"></script>
   <script type="text/babel">
-    // Wait for Dashboard to be defined
-    setTimeout(() => {
-      if (typeof Dashboard !== 'undefined') {
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Dashboard />);
-      } else {
-        document.getElementById('root').innerHTML = '<div class="loading" style="color: #ff4e00;">Error loading dashboard. Please refresh.</div>';
-      }
-    }, 500);
-  </script>
-
-  <!-- Babel is working -->
-  <script type="text/babel">
-    console.log("Babel is working");
-    console.log("React available:", typeof React);
-    console.log("Dashboard defined:", typeof Dashboard);
-  </script>
+    console.log("Script executing...");
+    console.log("Dashboard type:", typeof Dashboard);
+    console.log("window.Dashboard type:", typeof window.Dashboard);
+  
+  setTimeout(() => {
+    console.log("After timeout - Dashboard type:", typeof Dashboard);
+    console.log("After timeout - window.Dashboard type:", typeof window.Dashboard);
+    
+    const DashboardFunc = window.Dashboard || Dashboard;
+    
+    if (DashboardFunc) {
+      console.log("Rendering Dashboard...");
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(React.createElement(DashboardFunc));
+    } else {
+      console.error("Dashboard not found!");
+      document.getElementById('root').innerHTML = '<div class="loading" style="color: #ff4e00;">Error: Dashboard function not loaded. Check console.</div>';
+    }
+  }, 2000);
+</script>
   
 </body>
 </html>
