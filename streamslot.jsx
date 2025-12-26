@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+// StreamSlot - Professional Card Breaking Dashboard
+// CDN-compatible version for GitHub Pages
 
 // Load saved state from localStorage
 const loadSavedState = () => {
@@ -15,7 +16,10 @@ const loadSavedState = () => {
 
 const savedState = loadSavedState();
 
-export default function Dashboard() {
+function Dashboard() {
+  // Destructure React hooks from global React object
+  const { useState, useRef, useEffect } = React;
+  
   // SPONSOR TOGGLE - Set to true to reveal sponsor sections
   const SHOW_SPONSOR = false; // Change to true when you have a sponsor
   
@@ -7220,4 +7224,3 @@ function HelpContent() {
     </div>
   );
 }
-
