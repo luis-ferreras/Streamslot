@@ -4909,7 +4909,7 @@ function CustomSlotsContent({ customSlots, addCustomSlots, removeCustomSlot, cle
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              ="Slot One&#10;Slot Two, #e63946&#10;Slot Three, #2a9d8f, #ffffff"
+              placeholder="Slot One&#10;Slot Two, #e63946&#10;Slot Three, #2a9d8f, #ffffff"
               style={{
                 width: '100%',
                 minHeight: '6rem',
