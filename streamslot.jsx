@@ -5254,7 +5254,7 @@ function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 onKeyPress={(e) => e.key === 'Enter' && handlePurchase()}
-                ="Enter buyer's name..."
+                placeholder="Enter buyer's name..."
                 autoComplete="off"
                 style={{
                   width: '100%',
