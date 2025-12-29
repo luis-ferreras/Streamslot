@@ -536,9 +536,9 @@ function Dashboard() {
   const boxes = category === 'custom' ? customSlots.length : categories[category].boxes;
   
 const tabs = [
-    { id: 0, label: 'Scene', icon: '◈' },
+    { id: 0, label: 'Scene', icon: '■' },
     { id: 1, label: 'Entry', icon: '◉' },
-    { id: 2, label: 'Trade', icon: '⇄' },
+    { id: 2, label: 'Trade', icon: '↹' },
     { id: 3, label: 'Export', icon: '↓' },
     { id: 4, label: 'Help', icon: '?' },
   ];
