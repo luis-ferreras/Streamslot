@@ -6972,7 +6972,7 @@ function HelpContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '1.25rem' }}>💡</span>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0, lineHeight: 1.6 }}>
-            Have ideas, suggestions, or found a bug? We'd love to hear from you! Reach out at <strong style={{ color: 'var(--accent)' }}>[email placeholder]</strong>
+            Have ideas, suggestions, or found a bug? We'd love to hear from you! Reach out at <a style={{ color: 'var(--accent)' }} href="mailto:streamslotapp@gmail.com"><strong>streamslotapp@gmail.com</strong>
           </p>
         </div>
       </div>
