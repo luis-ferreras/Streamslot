@@ -3296,7 +3296,7 @@ select option {
             </div>
             
             {/* Bottom Row: Resources and Social Icons */}
-            <div className="footer-bottom-row" style={{
+            {/* <div className="footer-bottom-row" style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -3354,10 +3354,10 @@ select option {
                 >
                   Team Bags
                 </a>
-              </div>
+              </div> */
               
               {/* Social Media Links */}
-              <div className="footer-social" style={{
+              {/*<div className="footer-social" style={{
                 fontSize: '0.75rem',
                 color: 'var(--text-muted)',
                 display: 'flex',
@@ -3439,7 +3439,10 @@ select option {
                   WhatNot
                 </a>
               </div>
-            </div>
+            </div> */}
+
+            
+
             
             {/* Sponsored by - Controlled by SHOW_SPONSOR toggle */}
             {SHOW_SPONSOR && (
