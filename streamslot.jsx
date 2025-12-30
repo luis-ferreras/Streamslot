@@ -3260,15 +3260,17 @@ select option {
             </div>
           </div> */}
           
-          {/* AdSense code goes here */}
-          <ins 
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client="ca-pub-1453329637761114"
-            data-ad-slot="6488024242"
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
+          {/* AdSense Ad Unit */}
+          <div>
+            <ins 
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client="ca-pub-1453329637761114"
+              data-ad-slot="6488024242"
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            />
+          </div>
             
           
           {/* Global Footer */}
