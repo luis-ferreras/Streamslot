@@ -3268,7 +3268,7 @@ select option {
             data-ad-slot="6488024242"
             data-ad-format="auto"
             data-full-width-responsive="true"
-          /></ins>
+          />
             
           
           {/* Global Footer */}
