@@ -3296,7 +3296,7 @@ select option {
             </div>
             
             {/* Bottom Row: Resources and Social Icons */}
-            {/* <div className="footer-bottom-row" style={{
+            <div className="footer-bottom-row" style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -3309,9 +3309,9 @@ select option {
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <span>Resources:</span>
+                {/* <span>Resources:</span> */}
                 <a 
-                  href="https://example.com/link1" 
+                  href="https://streamslot.app/about" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3322,11 +3322,11 @@ select option {
                   onMouseEnter={(e) => e.target.style.opacity = '0.7'}
                   onMouseLeave={(e) => e.target.style.opacity = '1'}
                 >
-                  Card Supplies
+                  About
                 </a>
                 <span>•</span>
                 <a 
-                  href="https://example.com/link2" 
+                  href="https://streamslot.app/privacy" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3337,11 +3337,11 @@ select option {
                   onMouseEnter={(e) => e.target.style.opacity = '0.7'}
                   onMouseLeave={(e) => e.target.style.opacity = '1'}
                 >
-                  Breaker Cases
+                  Privacy Policy
                 </a>
                 <span>•</span>
                 <a 
-                  href="https://example.com/link3" 
+                  href="https://streamslot.app/contact" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3352,12 +3352,12 @@ select option {
                   onMouseEnter={(e) => e.target.style.opacity = '0.7'}
                   onMouseLeave={(e) => e.target.style.opacity = '1'}
                 >
-                  Team Bags
+                  Contact
                 </a>
-              </div> */}
+              </div> 
               
               {/* Social Media Links */}
-              {/*<div className="footer-social" style={{
+              <div className="footer-social" style={{
                 fontSize: '0.75rem',
                 color: 'var(--text-muted)',
                 display: 'flex',
@@ -3365,7 +3365,7 @@ select option {
                 gap: '0.5rem'
               }}>
                 <a 
-                  href="https://youtube.com/@yourhandle" 
+                  href="https://www.youtube.com/@StreamSlotApp" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3380,7 +3380,7 @@ select option {
                 </a>
                 <span>•</span>
                 <a 
-                  href="https://twitter.com/yourhandle" 
+                  href="https://x.com/Streamslot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3395,22 +3395,7 @@ select option {
                 </a>
                 <span>•</span>
                 <a 
-                  href="https://discord.gg/yourserver" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{
-                    color: '#ffffff',
-                    textDecoration: 'none',
-                    transition: 'opacity 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.target.style.opacity = '0.7'}
-                  onMouseLeave={(e) => e.target.style.opacity = '1'}
-                >
-                  Discord
-                </a>
-                <span>•</span>
-                <a 
-                  href="https://tiktok.com/@yourhandle" 
+                  href="https://www.tiktok.com/@streamslot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3425,7 +3410,7 @@ select option {
                 </a>
                 <span>•</span>
                 <a 
-                  href="https://whatnot.com/yourhandle" 
+                  href="https://www.whatnot.com/user/streamslot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{
@@ -3439,7 +3424,7 @@ select option {
                   WhatNot
                 </a>
               </div>
-            </div> */}
+            </div>
 
             
 
