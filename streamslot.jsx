@@ -3259,17 +3259,8 @@ select option {
             > 
             </div>
           </div> */}
-
           
-              {/* AdSense code goes here */}
-              <div style={{
-          width: '100%',
-          maxWidth: '1200px',
-          margin: '3rem auto 0 auto',
-          padding: '1.5rem',
-          textAlign: 'center',
-          borderTop: '1px solid var(--border-color)'
-        }}>
+          {/* AdSense code goes here */}
           <ins 
             className="adsbygoogle"
             style={{ display: 'block' }}
@@ -3277,9 +3268,7 @@ select option {
             data-ad-slot="6488024242"
             data-ad-format="auto"
             data-full-width-responsive="true"
-          />
-        </div>
-          
+          /></ins>
             
           
           {/* Global Footer */}
