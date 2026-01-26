@@ -1503,59 +1503,67 @@ select option {
           .content-area {
             padding: 1.25rem 1.5rem;
           }
-          
+
           .grid-responsive-4 {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
-          
+
           .export-grid {
             grid-template-columns: 1fr !important;
           }
-          
+
           .export-grid > div:last-child {
             grid-column: span 1 !important;
           }
-          
+
           .card {
             padding: 1.25rem;
           }
-          
+
           .tab-navigation {
             flex-wrap: wrap;
             gap: 0.5rem;
           }
-          
+
           .nav-left {
             flex: 1;
             min-width: 0;
           }
-          
+
           .nav-actions {
             flex: none;
             gap: 0.5rem !important;
           }
-          
+
           .sponsor-badge {
             font-size: 0.5625rem;
             padding: 0.25rem 0.5rem;
           }
-          
+
           .tab-buttons {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
             order: 3;
             justify-content: center;
             background: var(--bg-panel);
             padding: 0.5rem;
             border-radius: 0;
             margin-top: 0.25rem;
+            scroll-snap-type: x mandatory;
           }
-          
+
+          .tab-buttons::-webkit-scrollbar {
+            display: none;
+          }
+
           .tab-button {
             padding: 0.5rem 0.75rem;
             font-size: 0.875rem;
             white-space: nowrap;
+            scroll-snap-align: start;
           }
         }
         
@@ -1564,164 +1572,260 @@ select option {
           .top-banner {
             padding: 2rem 0.75rem;
           }
-          
+
           .top-banner.mobile-hidden {
             display: none !important;
           }
-          
+
           .mobile-scene-toggle {
             display: flex !important;
           }
-          
+
           .content-area {
             padding: 1rem;
+            padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+            padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+            padding-right: calc(1rem + env(safe-area-inset-right, 0px));
           }
-          
+
           .card {
             padding: 1rem;
             border-radius: 0;
           }
-          
+
           .card-grid {
             grid-template-columns: 1fr;
           }
-          
+
           /* Hide category text labels on mobile, show only emojis */
           .category-text {
             display: none;
           }
-          
+
+          /* Hide Reset button text on mobile — icon only */
+          .nav-action-label {
+            display: none;
+          }
+
           /* Responsive grid breakpoints */
           .grid-responsive-4 {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
-          
+
           .grid-responsive-3 {
             grid-template-columns: 1fr;
           }
-          
+
           .grid-responsive-2 {
             grid-template-columns: 1fr;
           }
-          
+
           .grid-1-3 {
             grid-template-columns: 1fr !important;
           }
-          
+
           .layout-controls-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
-          
+
           .layout-controls-grid > div {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
           }
-          
+
           .video-overlay-grid {
             grid-template-columns: 1fr !important;
           }
-          
+
           .video-overlay-section {
             padding: 0.75rem;
           }
-          
+
           .section-title {
             font-size: 1rem;
             margin-bottom: 1rem;
           }
-          
+
           .sponsor-footer {
             width: 100% !important;
             max-width: 320px !important;
             height: 50px !important;
           }
-          
+
           .sponsor-modal {
             width: 100% !important;
             max-width: 320px !important;
             height: 50px !important;
           }
-          
-          .mobile-scene-toggle {
-            display: flex !important;
-          }
-          
+
           .buyer-entry-form {
             grid-template-columns: 1fr !important;
           }
-          
+
           .stream-overlay-buttons {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
-          
+
           .stream-overlay-buttons > *:last-child {
             grid-column: span 2;
           }
-          
+
           .main-container {
             margin-top: 0 !important;
             height: 100vh !important;
           }
-          
+
           .main-container.scene-visible {
             margin-top: ${sceneHeight}rem !important;
             height: calc(100vh - ${sceneHeight}rem) !important;
           }
-          
-          /* Fluid control items */
+
+          /* Touch-friendly control items */
           .control-item {
             min-width: 0;
           }
-          
+
           .control-label {
-            font-size: 0.6875rem;
+            font-size: 0.75rem;
           }
-          
+
           .control-icon {
-            width: 1.25rem !important;
-            height: 1.25rem !important;
-            font-size: 0.625rem !important;
+            width: 1.75rem !important;
+            height: 1.75rem !important;
+            font-size: 0.75rem !important;
+          }
+
+          /* Touch targets — 44px minimum */
+          .tab-button {
+            min-height: 2.75rem;
+            padding: 0.625rem 0.75rem;
+          }
+
+          .video-control-row select {
+            min-height: 2.75rem;
+          }
+
+          .video-control-row button {
+            min-height: 2.25rem;
+          }
+
+          /* Font scaling for readability */
+          .control-label {
+            font-size: 0.75rem;
+          }
+
+          .video-control-row span {
+            font-size: 0.875rem;
+          }
+
+          /* Modal mobile sizing */
+          .modal-inner {
+            max-width: calc(100vw - 2rem) !important;
+            margin: 1rem;
+            padding: 1.5rem !important;
+          }
+
+          /* Footer mobile breathing room */
+          .footer-top-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 1rem !important;
+          }
+
+          .footer-logo-section {
+            justify-content: center !important;
+          }
+
+          .footer-blurb {
+            text-align: center !important;
+            font-size: 0.8125rem !important;
+            line-height: 1.6 !important;
+          }
+
+          .footer-bottom-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 1rem !important;
+          }
+
+          .footer-resources,
+          .footer-social {
+            justify-content: center !important;
+          }
+
+          .footer-resources a,
+          .footer-social a {
+            padding: 0.5rem;
+            min-height: 2.75rem;
+            display: inline-flex;
+            align-items: center;
+          }
+
+          /* Scene preview smaller on mobile */
+          .top-banner {
+            max-height: 50vh;
           }
         }
         
         /* Small mobile */
         @media (max-width: 30rem) {
           .content-area {
-            padding: 0.75rem;
+            padding: 0.5rem;
+            padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+            padding-left: calc(0.5rem + env(safe-area-inset-left, 0px));
+            padding-right: calc(0.5rem + env(safe-area-inset-right, 0px));
           }
-          
+
           .card {
             padding: 0.75rem;
           }
-          
+
           .grid-responsive-4 {
             grid-template-columns: 1fr;
           }
-          
+
           .stream-overlay-buttons {
             grid-template-columns: 1fr !important;
           }
-          
+
           .stream-overlay-buttons > *:last-child {
             grid-column: span 1;
           }
-          
+
           .section-title {
             font-size: 0.9375rem;
           }
-          
+
+          /* Tab buttons compact on small screens */
+          .tab-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 0.8125rem;
+          }
+
+          /* Logo text smaller */
+          .logo span {
+            font-size: 0.9375rem;
+          }
+
           /* Stream overlay responsive scaling */
           .stream-overlay-icon {
             font-size: 3rem !important;
           }
-          
+
           .stream-overlay-title {
             font-size: 2.5rem !important;
           }
-          
+
           .stash-pass-text {
             font-size: 4rem !important;
+          }
+
+          /* Tighter scene on very small screens */
+          .top-banner {
+            max-height: 40vh;
           }
         }
         
@@ -1740,33 +1844,7 @@ select option {
           }
         }
         
-        /* Footer Responsive Styling */
-        @media (max-width: 48rem) {
-          .footer-top-row {
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 0.75rem !important;
-          }
-          
-          .footer-logo-section {
-            justify-content: center !important;
-          }
-          
-          .footer-blurb {
-            text-align: center !important;
-          }
-          
-          .footer-bottom-row {
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 0.75rem !important;
-          }
-          
-          .footer-resources,
-          .footer-social {
-            justify-content: center !important;
-          }
-        }
+        /* Footer responsive styling is merged into the 48rem breakpoint above */
       `}</style>
 
       {/* Scene Area */}
@@ -2888,7 +2966,7 @@ select option {
                 }}
               >
                 <span>↺</span>
-                <span>Reset Board</span>
+                <span className="nav-action-label">Reset Board</span>
               </button>
             </div>
           </nav>
@@ -3205,7 +3283,7 @@ select option {
               animation: 'claimOverlayIn 0.2s ease-out',
               borderRadius: 0
             }}>
-              <div style={{
+              <div className="modal-inner" style={{
                 background: 'var(--bg-panel)',
                 borderRadius: 0,
                 padding: '2rem',
@@ -3356,7 +3434,7 @@ select option {
               animation: 'claimOverlayIn 0.2s ease-out',
               borderRadius: 0
             }}>
-              <div style={{
+              <div className="modal-inner" style={{
                 background: 'var(--bg-panel)',
                 borderRadius: 0,
                 padding: '2rem',
@@ -5588,7 +5666,7 @@ const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrd
             zIndex: 1000,
             animation: 'claimOverlayIn 0.2s ease-out'
           }}>
-            <div style={{
+            <div className="modal-inner" style={{
               background: 'var(--bg-panel)',
               borderRadius: 0,
               padding: '2rem',
@@ -6207,7 +6285,7 @@ const TradeMachineContent = React.memo(function TradeMachineContent({ teams, pur
           animation: 'claimOverlayIn 0.2s ease-out',
           borderRadius: 0
         }}>
-          <div style={{
+          <div className="modal-inner" style={{
             background: 'var(--bg-panel)',
             borderRadius: 0,
             padding: '2rem',
