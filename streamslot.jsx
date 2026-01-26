@@ -2,7 +2,7 @@
 // CDN-compatible version for GitHub Pages
 
 // Make React hooks globally available
-const { useState, useRef, useEffect } = React;
+const { useState, useRef, useEffect, useMemo, useCallback } = React;
 
 // Load saved state from localStorage
 const loadSavedState = () => {
@@ -18,6 +18,161 @@ const loadSavedState = () => {
 };
 
 const savedState = loadSavedState();
+
+// Static team data - defined outside component to avoid re-creation on every render
+const nbaTeams = [
+  { name: 'Hawks', city: 'Atlanta', abbr: 'ATL', primary: '#C8102E', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/atl.png' },
+  { name: 'Celtics', city: 'Boston', abbr: 'BOS', primary: '#088449', secondary: '#BA9653', logo: './images/nba/celtics.png' },
+  { name: 'Nets', city: 'Brooklyn', abbr: 'BKN', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/bkn.png' },
+  { name: 'Hornets', city: 'Charlotte', abbr: 'CHA', primary: '#1D1160', secondary: '#00788C', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/cha.png' },
+  { name: 'Bulls', city: 'Chicago', abbr: 'CHI', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/chi.png' },
+  { name: 'Cavaliers', city: 'Cleveland', abbr: 'CLE', primary: '#6F263D', secondary: '#041E42', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/cle.png' },
+  { name: 'Mavericks', city: 'Dallas', abbr: 'DAL', primary: '#00538C', secondary: '#B8C4CA', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/dal.png' },
+  { name: 'Nuggets', city: 'Denver', abbr: 'DEN', primary: '#0E2240', secondary: '#FEC524', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/den.png' },
+  { name: 'Pistons', city: 'Detroit', abbr: 'DET', primary: '#C8102E', secondary: '#1D42BA', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/det.png' },
+  { name: 'Warriors', city: 'Golden State', abbr: 'GSW', primary: '#1D428A', secondary: '#FFC72C', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/gs.png' },
+  { name: 'Rockets', city: 'Houston', abbr: 'HOU', primary: '#000000', secondary: '#C4CED4', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/hou.png' },
+  { name: 'Pacers', city: 'Indiana', abbr: 'IND', primary: '#002D62', secondary: '#FDBB30', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/ind.png' },
+  { name: 'Clippers', city: 'Los Angeles', abbr: 'LAC', primary: '#07103e', secondary: '#C8102E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/lac.png' },
+  { name: 'Lakers', city: 'Los Angeles', abbr: 'LAL', primary: '#552583', secondary: '#FDB927', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png' },
+  { name: 'Grizzlies', city: 'Memphis', abbr: 'MEM', primary: '#5D76A9', secondary: '#12173F', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mem.png' },
+  { name: 'Heat', city: 'Miami', abbr: 'MIA', primary: '#000000', secondary: '#98002E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mia.png' },
+  { name: 'Bucks', city: 'Milwaukee', abbr: 'MIL', primary: '#00471B', secondary: '#EEE1C6', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mil.png' },
+  { name: 'Wolves', city: 'Minnesota', abbr: 'MIN', primary: '#0C2340', secondary: '#236192', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/min.png' },
+  { name: 'Pelicans', city: 'New Orleans', abbr: 'NOP', primary: '#0C2340', secondary: '#85714D', logo: './images/nba/pelicans.png' },
+  { name: 'Knicks', city: 'New York', abbr: 'NYK', primary: '#006BB6', secondary: '#F58426', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/ny.png' },
+  { name: 'Thunder', city: 'Oklahoma City', abbr: 'OKC', primary: '#007AC1', secondary: '#EF3B24', logo: './images/nba/thunder.png' },
+  { name: 'Magic', city: 'Orlando', abbr: 'ORL', primary: '#0077c0', secondary: '#C4ced4', logo: './images/nba/magic.png' },
+  { name: '76ers', city: 'Philadelphia', abbr: 'PHI', primary: '#ed174c', secondary: '#002B5C', logo: './images/nba/sixers.png' },
+  { name: 'Suns', city: 'Phoenix', abbr: 'PHX', primary: '#1D1160', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/phx.png' },
+  { name: 'Blazers', city: 'Portland', abbr: 'POR', primary: '#000000', secondary: '#E03A3E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/por.png' },
+  { name: 'Kings', city: 'Sacramento', abbr: 'SAC', primary: '#5A2D81', secondary: '#63727A', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/sac.png' },
+  { name: 'Spurs', city: 'San Antonio', abbr: 'SAS', primary: '#000000', secondary: '#C4CED4', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/sa.png' },
+  { name: 'Raptors', city: 'Toronto', abbr: 'TOR', primary: '#000000', secondary: '#B4975A', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/tor.png' },
+  { name: 'Jazz', city: 'Utah', abbr: 'UTA', primary: '#6E9BD4', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/utah.png' },
+  { name: 'Wizards', city: 'Washington', abbr: 'WAS', primary: '#002B5C', secondary: '#E31837', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/wsh.png' },
+];
+
+const mlbTeams = [
+  { name: 'Diamondbacks', city: 'Arizona', abbr: 'ARI', primary: '#A71930', secondary: '#3EC1CD', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png' },
+  { name: 'Braves', city: 'Atlanta', abbr: 'ATL', primary: '#13274F', secondary: '#CE1141', logo: './images/mlb/braves.png' },
+  { name: 'Orioles', city: 'Baltimore', abbr: 'BAL', primary: '#FF4400', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png' },
+  { name: 'Red Sox', city: 'Boston', abbr: 'BOS', primary: '#0C2340', secondary: '#BD3039', logo: './images/mlb/redsox.png' },
+  { name: 'Cubs', city: 'Chicago', abbr: 'CHC', primary: '#0E3386', secondary: '#CC3433', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png' },
+  { name: 'White Sox', city: 'Chicago', abbr: 'CHW', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/chw.png' },
+  { name: 'Reds', city: 'Cincinnati', abbr: 'CIN', primary: '#C6011F', secondary: '#000000', logo: './images/mlb/reds.png' },
+  { name: 'Guardians', city: 'Cleveland', abbr: 'CLE', primary: '#00385D', secondary: '#E50022', logo: './images/mlb/guardians.png' },
+  { name: 'Rockies', city: 'Colorado', abbr: 'COL', primary: '#000000', secondary: '#33006f', logo: './images/mlb/rockies.png' },
+  { name: 'Tigers', city: 'Detroit', abbr: 'DET', primary: '#0C2340', secondary: '#FA4616', logo: './images/mlb/tigers.png' },
+  { name: 'Astros', city: 'Houston', abbr: 'HOU', primary: '#002D62', secondary: '#EB6E1F', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png' },
+  { name: 'Royals', city: 'Kansas City', abbr: 'KC', primary: '#004687', secondary: '#BD9B60', logo: './images/mlb/royals.png' },
+  { name: 'Angels', city: 'Los Angeles', abbr: 'LAA', primary: '#BA0021', secondary: '#003263', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png' },
+  { name: 'Dodgers', city: 'Los Angeles', abbr: 'LAD', primary: '#005A9C', secondary: '#EF3E42', logo: './images/mlb/dodgers.png' },
+  { name: 'Marlins', city: 'Miami', abbr: 'MIA', primary: '#00A3E0', secondary: '#EF3340', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png' },
+  { name: 'Brewers', city: 'Milwaukee', abbr: 'MIL', primary: '#00244b', secondary: '#ffc500', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png' },
+  { name: 'Twins', city: 'Minnesota', abbr: 'MIN', primary: '#00193F', secondary: '#FFFFFF', logo: './images/mlb/twins.png' },
+  { name: 'Mets', city: 'New York', abbr: 'NYM', primary: '#002D72', secondary: '#FF5910', logo: './images/mlb/mets.png' },
+  { name: 'Yankees', city: 'New York', abbr: 'NYY', primary: '#0C2340', secondary: '#003087', logo: './images/mlb/yankees.png' },
+  { name: 'Athletics', city: 'Oakland', abbr: 'OAK', primary: '#003831', secondary: '#EFB21E', logo: './images/mlb/athletics.png' },
+  { name: 'Phillies', city: 'Philadelphia', abbr: 'PHI', primary: '#E81828', secondary: '#002D72', logo: './images/mlb/phillies.png' },
+  { name: 'Pirates', city: 'Pittsburgh', abbr: 'PIT', primary: '#27251F', secondary: '#FDB827', logo: './images/mlb/pirates.png' },
+  { name: 'Padres', city: 'San Diego', abbr: 'SD', primary: '#2F241D', secondary: '#b9b098', logo: './images/mlb/padres.png' },
+  { name: 'Giants', city: 'San Francisco', abbr: 'SF', primary: '#27251F', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png' },
+  { name: 'Mariners', city: 'Seattle', abbr: 'SEA', primary: '#0C2C56', secondary: '#005C5C', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png' },
+  { name: 'Cardinals', city: 'St. Louis', abbr: 'STL', primary: '#C41E3A', secondary: '#0C2340', logo: './images/mlb/cardinals.png' },
+  { name: 'Rays', city: 'Tampa Bay', abbr: 'TB', primary: '#8FBCE6', secondary: '#092C5C', logo: './images/mlb/rays.png' },
+  { name: 'Rangers', city: 'Texas', abbr: 'TEX', primary: '#003278', secondary: '#C0111F', logo: './images/mlb/rangers.png' },
+  { name: 'Blue Jays', city: 'Toronto', abbr: 'TOR', primary: '#134A8E', secondary: '#E8291C', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png' },
+  { name: 'Nationals', city: 'Washington', abbr: 'WSH', primary: '#AB0003', secondary: '#14225A', logo: './images/mlb/nationals.png' },
+];
+
+const nflTeams = [
+  { name: 'Cardinals', city: 'Arizona', abbr: 'ARI', primary: '#97233F', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ari.png' },
+  { name: 'Falcons', city: 'Atlanta', abbr: 'ATL', primary: '#A71930', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/atl.png' },
+  { name: 'Ravens', city: 'Baltimore', abbr: 'BAL', primary: '#241773', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/bal.png' },
+  { name: 'Bills', city: 'Buffalo', abbr: 'BUF', primary: '#00338D', secondary: '#C60C30', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/buf.png' },
+  { name: 'Panthers', city: 'Carolina', abbr: 'CAR', primary: '#0085CA', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/car.png' },
+  { name: 'Bears', city: 'Chicago', abbr: 'CHI', primary: '#0B162A', secondary: '#C83803', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/chi.png' },
+  { name: 'Bengals', city: 'Cincinnati', abbr: 'CIN', primary: '#FB4F14', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/cin.png' },
+  { name: 'Browns', city: 'Cleveland', abbr: 'CLE', primary: '#311D00', secondary: '#FF3C00', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/cle.png' },
+  { name: 'Cowboys', city: 'Dallas', abbr: 'DAL', primary: '#003594', secondary: '#869397', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/dal.png' },
+  { name: 'Broncos', city: 'Denver', abbr: 'DEN', primary: '#FB4F14', secondary: '#002244', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/den.png' },
+  { name: 'Lions', city: 'Detroit', abbr: 'DET', primary: '#0076B6', secondary: '#B0B7BC', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/det.png' },
+  { name: 'Packers', city: 'Green Bay', abbr: 'GB', primary: '#203731', secondary: '#FFB612', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/gb.png' },
+  { name: 'Texans', city: 'Houston', abbr: 'HOU', primary: '#03202F', secondary: '#A71930', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/hou.png' },
+  { name: 'Colts', city: 'Indianapolis', abbr: 'IND', primary: '#002C5F', secondary: '#A2AAAD', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ind.png' },
+  { name: 'Jaguars', city: 'Jacksonville', abbr: 'JAX', primary: '#006778', secondary: '#D7A22A', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/jax.png' },
+  { name: 'Chiefs', city: 'Kansas City', abbr: 'KC', primary: '#E31837', secondary: '#FFB81C', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png' },
+  { name: 'Raiders', city: 'Las Vegas', abbr: 'LV', primary: '#000000', secondary: '#A5ACAF', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lv.png' },
+  { name: 'Chargers', city: 'Los Angeles', abbr: 'LAC', primary: '#0080C6', secondary: '#FFC20E', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lac.png' },
+  { name: 'Rams', city: 'Los Angeles', abbr: 'LAR', primary: '#003594', secondary: '#FF8200', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png' },
+  { name: 'Dolphins', city: 'Miami', abbr: 'MIA', primary: '#008E97', secondary: '#FC4C02', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/mia.png' },
+  { name: 'Vikings', city: 'Minnesota', abbr: 'MIN', primary: '#4F2683', secondary: '#FFC62F', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/min.png' },
+  { name: 'Patriots', city: 'New England', abbr: 'NE', primary: '#002244', secondary: '#C60C30', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ne.png' },
+  { name: 'Saints', city: 'New Orleans', abbr: 'NO', primary: '#D3BC8D', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/no.png' },
+  { name: 'Giants', city: 'New York', abbr: 'NYG', primary: '#0B2265', secondary: '#A71930', logo: './images/nfl/giants.png' },
+  { name: 'Jets', city: 'New York', abbr: 'NYJ', primary: '#125740', secondary: '#000000', logo: './images/nfl/jets.png' },
+  { name: 'Eagles', city: 'Philadelphia', abbr: 'PHI', primary: '#004C54', secondary: '#A5ACAF', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/phi.png' },
+  { name: 'Steelers', city: 'Pittsburgh', abbr: 'PIT', primary: '#FFB612', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' },
+  { name: '49ers', city: 'San Francisco', abbr: 'SF', primary: '#AA0000', secondary: '#B3995D', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sf.png' },
+  { name: 'Seahawks', city: 'Seattle', abbr: 'SEA', primary: '#002244', secondary: '#69BE28', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sea.png' },
+  { name: 'Buccaneers', city: 'Tampa Bay', abbr: 'TB', primary: '#D50A0A', secondary: '#34302B', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/tb.png' },
+  { name: 'Titans', city: 'Tennessee', abbr: 'TEN', primary: '#0C2340', secondary: '#4B92DB', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ten.png' },
+  { name: 'Commanders', city: 'Washington', abbr: 'WAS', primary: '#5A1414', secondary: '#FFB612', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png' },
+];
+
+const allTeams = {
+  nba: nbaTeams,
+  mlb: mlbTeams,
+  nfl: nflTeams
+};
+
+// Utility functions - defined outside component to avoid re-creation on every render
+const getContrastColor = (hexColor) => {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
+const isValidHex = (str) => /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
+
+const normalizeHex = (hex) => {
+  let h = hex.replace('#', '');
+  if (h.length === 3) {
+    h = h.split('').map(c => c + c).join('');
+  }
+  return '#' + h.toLowerCase();
+};
+
+// Static data defined outside component
+const categories = {
+  nba: { label: 'NBA Basketball', boxes: 30 },
+  mlb: { label: 'MLB Baseball', boxes: 30 },
+  nfl: { label: 'NFL Football', boxes: 32 },
+  custom: { label: 'Custom Slots', boxes: 0 }
+};
+
+const tabs = [
+  { id: 0, label: 'Scene', icon: '■' },
+  { id: 1, label: 'Entry', icon: '◉' },
+  { id: 2, label: 'Trade', icon: '↹' },
+  { id: 3, label: 'Export', icon: '↓' },
+  { id: 4, label: 'Help', icon: '?' },
+];
+
+// Reusable SVG logo component
+const StreamSlotLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <rect width="20" height="20" rx="4" fill="#442544"/>
+    <rect x="3" y="3" width="6" height="6" rx="1" fill="#fe68ff"/>
+    <rect x="11" y="3" width="6" height="6" rx="1" fill="#fe68ff" opacity="0.6"/>
+    <rect x="3" y="11" width="6" height="6" rx="1" fill="#fe68ff" opacity="0.6"/>
+    <rect x="11" y="11" width="6" height="6" rx="1" fill="#fe68ff" opacity="0.3"/>
+  </svg>
+);
 
 function Dashboard() {
   // SPONSOR TOGGLE - Set to true to reveal sponsor sections
@@ -74,240 +229,83 @@ function Dashboard() {
   const sceneRef = useRef(null);
   const [mobileSceneHidden, setMobileSceneHidden] = useState(true); // Hidden by default on mobile
 
-  // AdSense script loader - Load once on component mount
+  // AdSense initialization - script is loaded via index.html
   useEffect(() => {
-    // Check if AdSense script is already loaded
-    if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1453329637761114';
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
-      
-      // Initialize ad after script loads
-      script.onload = () => {
-        try {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (err) {
-          console.log('AdSense initialization:', err);
-        }
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (err) {
+      console.log('AdSense initialization:', err);
+    }
+  }, []);
+
+  // Shared drag resize logic
+  const useDragResize = (isDraggingState, setIsDraggingState, startYRef, startHeightRef, setHeight, min, max, roundFn) => {
+    useEffect(() => {
+      const handleMouseMove = (e) => {
+        if (!isDraggingState) return;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = clientY - startYRef.current;
+        const deltaRem = deltaY / 16;
+        const newHeight = Math.min(max, Math.max(min, startHeightRef.current + deltaRem));
+        setHeight(roundFn(newHeight));
       };
-    } else {
-      // Script already loaded, just initialize
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        console.log('AdSense initialization:', err);
+
+      const handleMouseUp = () => setIsDraggingState(false);
+
+      if (isDraggingState) {
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleMouseMove);
+        document.addEventListener('touchend', handleMouseUp);
+        document.body.style.cursor = 'ns-resize';
+        document.body.style.userSelect = 'none';
       }
-    }
-  }, []); // Empty dependency array = run once on mount
-  
-  // Handle drag resize
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const deltaY = clientY - dragStartY.current;
-      const deltaRem = deltaY / 16;
-      const newHeight = Math.min(64, Math.max(18, dragStartHeight.current + deltaRem));
-      setSceneHeight(Math.round(newHeight));
-    };
-    
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-    
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleMouseMove);
-      document.addEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleMouseMove);
-      document.removeEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isDragging]);
-  
-  // Handle custom slots drag resize
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isCustomSlotsDragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const deltaY = clientY - customSlotsDragStartY.current;
-      const deltaRem = deltaY / 16;
-      const newHeight = Math.min(30, Math.max(6, customSlotsDragStartHeight.current + deltaRem));
-      setCustomSlotsHeight(Math.round(newHeight * 2) / 2); // Round to 0.5rem increments
-    };
-    
-    const handleMouseUp = () => {
-      setIsCustomSlotsDragging(false);
-    };
-    
-    if (isCustomSlotsDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleMouseMove);
-      document.addEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleMouseMove);
-      document.removeEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isCustomSlotsDragging]);
-  
-  const handleCustomSlotsDragStart = (e) => {
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleMouseMove);
+        document.removeEventListener('touchend', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }, [isDraggingState]);
+  };
+
+  useDragResize(isDragging, setIsDragging, dragStartY, dragStartHeight, setSceneHeight, 18, 64, Math.round);
+  useDragResize(isCustomSlotsDragging, setIsCustomSlotsDragging, customSlotsDragStartY, customSlotsDragStartHeight, setCustomSlotsHeight, 6, 30, (v) => Math.round(v * 2) / 2);
+
+  const handleCustomSlotsDragStart = useCallback((e) => {
     setIsCustomSlotsDragging(true);
     customSlotsDragStartY.current = e.touches ? e.touches[0].clientY : e.clientY;
     customSlotsDragStartHeight.current = customSlotsHeight;
-  };
-  
-  const handleDragStart = (e) => {
+  }, [customSlotsHeight]);
+
+  const handleDragStart = useCallback((e) => {
     setIsDragging(true);
     dragStartY.current = e.touches ? e.touches[0].clientY : e.clientY;
     dragStartHeight.current = sceneHeight;
-  };
-  
-  const nbaTeams = [
-    { name: 'Hawks', city: 'Atlanta', abbr: 'ATL', primary: '#C8102E', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/atl.png' },
-    { name: 'Celtics', city: 'Boston', abbr: 'BOS', primary: '#088449', secondary: '#BA9653', logo: './images/nba/celtics.png' },
-    { name: 'Nets', city: 'Brooklyn', abbr: 'BKN', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/bkn.png' },
-    { name: 'Hornets', city: 'Charlotte', abbr: 'CHA', primary: '#1D1160', secondary: '#00788C', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/cha.png' },
-    { name: 'Bulls', city: 'Chicago', abbr: 'CHI', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/chi.png' },
-    { name: 'Cavaliers', city: 'Cleveland', abbr: 'CLE', primary: '#6F263D', secondary: '#041E42', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/cle.png' },
-    { name: 'Mavericks', city: 'Dallas', abbr: 'DAL', primary: '#00538C', secondary: '#B8C4CA', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/dal.png' },
-    { name: 'Nuggets', city: 'Denver', abbr: 'DEN', primary: '#0E2240', secondary: '#FEC524', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/den.png' },
-    { name: 'Pistons', city: 'Detroit', abbr: 'DET', primary: '#C8102E', secondary: '#1D42BA', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/det.png' },
-    { name: 'Warriors', city: 'Golden State', abbr: 'GSW', primary: '#1D428A', secondary: '#FFC72C', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/gs.png' },
-    { name: 'Rockets', city: 'Houston', abbr: 'HOU', primary: '#000000', secondary: '#C4CED4', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/hou.png' },
-    { name: 'Pacers', city: 'Indiana', abbr: 'IND', primary: '#002D62', secondary: '#FDBB30', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/ind.png' },
-    { name: 'Clippers', city: 'Los Angeles', abbr: 'LAC', primary: '#07103e', secondary: '#C8102E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/lac.png' },
-    { name: 'Lakers', city: 'Los Angeles', abbr: 'LAL', primary: '#552583', secondary: '#FDB927', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png' },
-    { name: 'Grizzlies', city: 'Memphis', abbr: 'MEM', primary: '#5D76A9', secondary: '#12173F', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mem.png' },
-    { name: 'Heat', city: 'Miami', abbr: 'MIA', primary: '#000000', secondary: '#98002E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mia.png' },
-    { name: 'Bucks', city: 'Milwaukee', abbr: 'MIL', primary: '#00471B', secondary: '#EEE1C6', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/mil.png' },
-    { name: 'Wolves', city: 'Minnesota', abbr: 'MIN', primary: '#0C2340', secondary: '#236192', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/min.png' },
-    { name: 'Pelicans', city: 'New Orleans', abbr: 'NOP', primary: '#0C2340', secondary: '#85714D', logo: './images/nba/pelicans.png' },
-    { name: 'Knicks', city: 'New York', abbr: 'NYK', primary: '#006BB6', secondary: '#F58426', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/ny.png' },
-    { name: 'Thunder', city: 'Oklahoma City', abbr: 'OKC', primary: '#007AC1', secondary: '#EF3B24', logo: './images/nba/thunder.png' },
-    { name: 'Magic', city: 'Orlando', abbr: 'ORL', primary: '#0077c0', secondary: '#C4ced4', logo: './images/nba/magic.png' },
-    { name: '76ers', city: 'Philadelphia', abbr: 'PHI', primary: '#ed174c', secondary: '#002B5C', logo: './images/nba/sixers.png' },
-    { name: 'Suns', city: 'Phoenix', abbr: 'PHX', primary: '#1D1160', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/phx.png' },
-    { name: 'Blazers', city: 'Portland', abbr: 'POR', primary: '#000000', secondary: '#E03A3E', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/por.png' },
-    { name: 'Kings', city: 'Sacramento', abbr: 'SAC', primary: '#5A2D81', secondary: '#63727A', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/sac.png' },
-    { name: 'Spurs', city: 'San Antonio', abbr: 'SAS', primary: '#000000', secondary: '#C4CED4', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/sa.png' },
-    { name: 'Raptors', city: 'Toronto', abbr: 'TOR', primary: '#000000', secondary: '#B4975A', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/tor.png' },
-    { name: 'Jazz', city: 'Utah', abbr: 'UTA', primary: '#6E9BD4', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/utah.png' },
-    { name: 'Wizards', city: 'Washington', abbr: 'WAS', primary: '#002B5C', secondary: '#E31837', logo: 'https://a.espncdn.com/i/teamlogos/nba/500/wsh.png' },
-  ];
-  
-  const mlbTeams = [
-    { name: 'Diamondbacks', city: 'Arizona', abbr: 'ARI', primary: '#A71930', secondary: '#3EC1CD', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png' },
-    { name: 'Braves', city: 'Atlanta', abbr: 'ATL', primary: '#13274F', secondary: '#CE1141', logo: './images/mlb/braves.png' },
-    { name: 'Orioles', city: 'Baltimore', abbr: 'BAL', primary: '#FF4400', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png' },
-    { name: 'Red Sox', city: 'Boston', abbr: 'BOS', primary: '#0C2340', secondary: '#BD3039', logo: './images/mlb/redsox.png' },
-    { name: 'Cubs', city: 'Chicago', abbr: 'CHC', primary: '#0E3386', secondary: '#CC3433', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png' },
-    { name: 'White Sox', city: 'Chicago', abbr: 'CHW', primary: '#000000', secondary: '#FFFFFF', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/chw.png' },
-    { name: 'Reds', city: 'Cincinnati', abbr: 'CIN', primary: '#C6011F', secondary: '#000000', logo: './images/mlb/reds.png' },
-    { name: 'Guardians', city: 'Cleveland', abbr: 'CLE', primary: '#00385D', secondary: '#E50022', logo: './images/mlb/guardians.png' },
-    { name: 'Rockies', city: 'Colorado', abbr: 'COL', primary: '#000000', secondary: '#33006f', logo: './images/mlb/rockies.png' },
-    { name: 'Tigers', city: 'Detroit', abbr: 'DET', primary: '#0C2340', secondary: '#FA4616', logo: './images/mlb/tigers.png' },
-    { name: 'Astros', city: 'Houston', abbr: 'HOU', primary: '#002D62', secondary: '#EB6E1F', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png' },
-    { name: 'Royals', city: 'Kansas City', abbr: 'KC', primary: '#004687', secondary: '#BD9B60', logo: './images/mlb/royals.png' },
-    { name: 'Angels', city: 'Los Angeles', abbr: 'LAA', primary: '#BA0021', secondary: '#003263', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png' },
-    { name: 'Dodgers', city: 'Los Angeles', abbr: 'LAD', primary: '#005A9C', secondary: '#EF3E42', logo: './images/mlb/dodgers.png' },
-    { name: 'Marlins', city: 'Miami', abbr: 'MIA', primary: '#00A3E0', secondary: '#EF3340', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png' },
-    { name: 'Brewers', city: 'Milwaukee', abbr: 'MIL', primary: '#00244b', secondary: '#ffc500', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png' },
-    { name: 'Twins', city: 'Minnesota', abbr: 'MIN', primary: '#00193F', secondary: '#FFFFFF', logo: './images/mlb/twins.png' },
-    { name: 'Mets', city: 'New York', abbr: 'NYM', primary: '#002D72', secondary: '#FF5910', logo: './images/mlb/mets.png' },
-    { name: 'Yankees', city: 'New York', abbr: 'NYY', primary: '#0C2340', secondary: '#003087', logo: './images/mlb/yankees.png' },
-    { name: 'Athletics', city: 'Oakland', abbr: 'OAK', primary: '#003831', secondary: '#EFB21E', logo: './images/mlb/athletics.png' },
-    { name: 'Phillies', city: 'Philadelphia', abbr: 'PHI', primary: '#E81828', secondary: '#002D72', logo: './images/mlb/phillies.png' },
-    { name: 'Pirates', city: 'Pittsburgh', abbr: 'PIT', primary: '#27251F', secondary: '#FDB827', logo: './images/mlb/pirates.png' },
-    { name: 'Padres', city: 'San Diego', abbr: 'SD', primary: '#2F241D', secondary: '#b9b098', logo: './images/mlb/padres.png' },
-    { name: 'Giants', city: 'San Francisco', abbr: 'SF', primary: '#27251F', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png' },
-    { name: 'Mariners', city: 'Seattle', abbr: 'SEA', primary: '#0C2C56', secondary: '#005C5C', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png' },
-    { name: 'Cardinals', city: 'St. Louis', abbr: 'STL', primary: '#C41E3A', secondary: '#0C2340', logo: './images/mlb/cardinals.png' },
-    { name: 'Rays', city: 'Tampa Bay', abbr: 'TB', primary: '#8FBCE6', secondary: '#092C5C', logo: './images/mlb/rays.png' },
-    { name: 'Rangers', city: 'Texas', abbr: 'TEX', primary: '#003278', secondary: '#C0111F', logo: './images/mlb/rangers.png' },
-    { name: 'Blue Jays', city: 'Toronto', abbr: 'TOR', primary: '#134A8E', secondary: '#E8291C', logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png' },
-    { name: 'Nationals', city: 'Washington', abbr: 'WSH', primary: '#AB0003', secondary: '#14225A', logo: './images/mlb/nationals.png' },
-  ];
-  
-  const nflTeams = [
-    { name: 'Cardinals', city: 'Arizona', abbr: 'ARI', primary: '#97233F', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ari.png' },
-    { name: 'Falcons', city: 'Atlanta', abbr: 'ATL', primary: '#A71930', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/atl.png' },
-    { name: 'Ravens', city: 'Baltimore', abbr: 'BAL', primary: '#241773', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/bal.png' },
-    { name: 'Bills', city: 'Buffalo', abbr: 'BUF', primary: '#00338D', secondary: '#C60C30', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/buf.png' },
-    { name: 'Panthers', city: 'Carolina', abbr: 'CAR', primary: '#0085CA', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/car.png' },
-    { name: 'Bears', city: 'Chicago', abbr: 'CHI', primary: '#0B162A', secondary: '#C83803', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/chi.png' },
-    { name: 'Bengals', city: 'Cincinnati', abbr: 'CIN', primary: '#FB4F14', secondary: '#000000', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/cin.png' },
-    { name: 'Browns', city: 'Cleveland', abbr: 'CLE', primary: '#311D00', secondary: '#FF3C00', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/cle.png' },
-    { name: 'Cowboys', city: 'Dallas', abbr: 'DAL', primary: '#003594', secondary: '#869397', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/dal.png' },
-    { name: 'Broncos', city: 'Denver', abbr: 'DEN', primary: '#FB4F14', secondary: '#002244', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/den.png' },
-    { name: 'Lions', city: 'Detroit', abbr: 'DET', primary: '#0076B6', secondary: '#B0B7BC', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/det.png' },
-    { name: 'Packers', city: 'Green Bay', abbr: 'GB', primary: '#203731', secondary: '#FFB612', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/gb.png' },
-    { name: 'Texans', city: 'Houston', abbr: 'HOU', primary: '#03202F', secondary: '#A71930', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/hou.png' },
-    { name: 'Colts', city: 'Indianapolis', abbr: 'IND', primary: '#002C5F', secondary: '#A2AAAD', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ind.png' },
-    { name: 'Jaguars', city: 'Jacksonville', abbr: 'JAX', primary: '#006778', secondary: '#D7A22A', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/jax.png' },
-    { name: 'Chiefs', city: 'Kansas City', abbr: 'KC', primary: '#E31837', secondary: '#FFB81C', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png' },
-    { name: 'Raiders', city: 'Las Vegas', abbr: 'LV', primary: '#000000', secondary: '#A5ACAF', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lv.png' },
-    { name: 'Chargers', city: 'Los Angeles', abbr: 'LAC', primary: '#0080C6', secondary: '#FFC20E', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lac.png' },
-    { name: 'Rams', city: 'Los Angeles', abbr: 'LAR', primary: '#003594', secondary: '#FF8200', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png' },
-    { name: 'Dolphins', city: 'Miami', abbr: 'MIA', primary: '#008E97', secondary: '#FC4C02', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/mia.png' },
-    { name: 'Vikings', city: 'Minnesota', abbr: 'MIN', primary: '#4F2683', secondary: '#FFC62F', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/min.png' },
-    { name: 'Patriots', city: 'New England', abbr: 'NE', primary: '#002244', secondary: '#C60C30', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ne.png' },
-    { name: 'Saints', city: 'New Orleans', abbr: 'NO', primary: '#D3BC8D', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/no.png' },
-    { name: 'Giants', city: 'New York', abbr: 'NYG', primary: '#0B2265', secondary: '#A71930', logo: './images/nfl/giants.png' },
-    { name: 'Jets', city: 'New York', abbr: 'NYJ', primary: '#125740', secondary: '#000000', logo: './images/nfl/jets.png' },
-    { name: 'Eagles', city: 'Philadelphia', abbr: 'PHI', primary: '#004C54', secondary: '#A5ACAF', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/phi.png' },
-    { name: 'Steelers', city: 'Pittsburgh', abbr: 'PIT', primary: '#FFB612', secondary: '#101820', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' },
-    { name: '49ers', city: 'San Francisco', abbr: 'SF', primary: '#AA0000', secondary: '#B3995D', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sf.png' },
-    { name: 'Seahawks', city: 'Seattle', abbr: 'SEA', primary: '#002244', secondary: '#69BE28', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sea.png' },
-    { name: 'Buccaneers', city: 'Tampa Bay', abbr: 'TB', primary: '#D50A0A', secondary: '#34302B', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/tb.png' },
-    { name: 'Titans', city: 'Tennessee', abbr: 'TEN', primary: '#0C2340', secondary: '#4B92DB', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/ten.png' },
-    { name: 'Commanders', city: 'Washington', abbr: 'WAS', primary: '#5A1414', secondary: '#FFB612', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png' },
-  ];
-  
-  const allTeams = {
-    nba: nbaTeams,
-    mlb: mlbTeams,
-    nfl: nflTeams
-  };
+  }, [sceneHeight]);
   
   // Transaction log helper
-  const addLogEntry = (message) => {
-    setTransactionLog(prev => [...prev, { 
-      timestamp: Date.now(), 
-      message 
+  const addLogEntry = useCallback((message) => {
+    setTransactionLog(prev => [...prev, {
+      timestamp: Date.now(),
+      message
     }]);
-  };
-  
+  }, []);
+
   // Create custom teams array from customSlots
-  const customTeamsArray = customSlots.map((slot, i) => ({
+  const customTeamsArray = useMemo(() => customSlots.map((slot, i) => ({
     name: slot.name,
     city: '',
     abbr: slot.name.substring(0, 3).toUpperCase(),
     primary: slot.bgColor,
     secondary: slot.textColor,
     logo: null
-  }));
-  
-  const currentTeams = category === 'custom' ? customTeamsArray : (allTeams[category] || nbaTeams);
+  })), [customSlots]);
+
+  const currentTeams = useMemo(() => category === 'custom' ? customTeamsArray : (allTeams[category] || nbaTeams), [category, customTeamsArray]);
   const isCustomMode = category === 'custom';
   
   const [teamOrder, setTeamOrder] = useState(() => {
@@ -318,70 +316,35 @@ function Dashboard() {
     return currentTeams.map((_, i) => i);
   });
   
-  // Save state to localStorage whenever it changes
+  // Save state to localStorage whenever it changes (debounced)
   useEffect(() => {
-    const stateToSave = {
-      columns,
-      category,
-      spacing,
-      squareBoxes,
-      sceneHeight,
-      showLabels,
-      roundedCorners,
-      borders,
-      swapColors,
-      boxName,
-      boxNumber,
-      sceneNote,
-      showBoxName,
-      showBoxNumber,
-      showSceneNote,
-      showSlotCount,
-      slotCounterText,
-      sceneTextSize,
-      chromaBackground,
-      sceneTextColor,
-      purchasedTeams,
-      transactionLog,
-      overlayDuration,
-      customSlots,
-      customSlotsHeight,
-      videoOverlay,
-      teamOrder
-    };
-    
-    try {
-      localStorage.setItem('streamslot-state', JSON.stringify(stateToSave));
-    } catch (e) {
-      console.warn('Failed to save state:', e);
-    }
+    const timer = setTimeout(() => {
+      const stateToSave = {
+        columns, category, spacing, squareBoxes, sceneHeight, showLabels,
+        roundedCorners, borders, swapColors, boxName, boxNumber, sceneNote,
+        showBoxName, showBoxNumber, showSceneNote, showSlotCount, slotCounterText,
+        sceneTextSize, chromaBackground, sceneTextColor, purchasedTeams,
+        transactionLog, overlayDuration, customSlots, customSlotsHeight,
+        videoOverlay, teamOrder
+      };
+
+      try {
+        localStorage.setItem('streamslot-state', JSON.stringify(stateToSave));
+      } catch (e) {
+        console.warn('Failed to save state:', e);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [columns, category, spacing, squareBoxes, sceneHeight, showLabels, roundedCorners, borders, swapColors, boxName, boxNumber, sceneNote, showBoxName, showBoxNumber, showSceneNote, showSlotCount, slotCounterText, sceneTextSize, chromaBackground, sceneTextColor, purchasedTeams, transactionLog, overlayDuration, customSlots, customSlotsHeight, videoOverlay, teamOrder]);
   
   // Handle category change with direct state updates
-  const handleCategoryChange = (newCategory) => {
-    if (newCategory === category) return; // Don't do anything if same category
-    
-    // Check if there are any purchased teams
-    const hasEntries = Object.keys(purchasedTeams).length > 0;
-    
-    if (hasEntries) {
-      // Show confirmation dialog
-      setPendingCategory(newCategory);
-      setShowCategoryConfirm(true);
-    } else {
-      // No entries, change immediately
-      executeCategoryChange(newCategory);
-    }
-  };
-  
-  const executeCategoryChange = (newCategory) => {
+  const executeCategoryChange = useCallback((newCategory) => {
     setCategory(newCategory);
     setPurchasedTeams({});
-    
+
     if (newCategory === 'custom') {
-      // For custom, use customSlots array
       setTeamOrder(customSlots.map((_, i) => i));
-      // Enforce custom slot styling
       setSquareBoxes(false);
       setBorders(false);
       setSwapColors(false);
@@ -390,35 +353,23 @@ function Dashboard() {
       const newTeams = allTeams[newCategory] || nbaTeams;
       setTeamOrder(newTeams.map((_, i) => i));
     }
-  };
-  
-  // Auto-contrast: determine if text should be white or black based on background
-  const getContrastColor = (hexColor) => {
-    // Remove # if present
-    const hex = hexColor.replace('#', '');
-    // Parse RGB
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    // Calculate luminance
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-  };
-  
-  // Validate hex color
-  const isValidHex = (str) => /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
-  
-  // Normalize hex (expand shorthand and ensure #)
-  const normalizeHex = (hex) => {
-    let h = hex.replace('#', '');
-    if (h.length === 3) {
-      h = h.split('').map(c => c + c).join('');
+  }, [customSlots]);
+
+  const handleCategoryChange = useCallback((newCategory) => {
+    if (newCategory === category) return;
+
+    const hasEntries = Object.keys(purchasedTeams).length > 0;
+
+    if (hasEntries) {
+      setPendingCategory(newCategory);
+      setShowCategoryConfirm(true);
+    } else {
+      executeCategoryChange(newCategory);
     }
-    return '#' + h.toLowerCase();
-  };
+  }, [category, purchasedTeams, executeCategoryChange]);
   
   // Handle adding custom slots
-  const addCustomSlots = (slotsText) => {
+  const addCustomSlots = useCallback((slotsText) => {
     const newSlots = slotsText
       .split('\n')
       .map(line => {
@@ -446,36 +397,40 @@ function Dashboard() {
       .filter(s => s !== null);
     
     if (newSlots.length === 0) return;
-    
+
     const updatedSlots = [...customSlots, ...newSlots];
     setCustomSlots(updatedSlots);
     setTeamOrder(updatedSlots.map((_, i) => i));
     setPurchasedTeams({});
-  };
-  
+  }, [customSlots]);
+
   // Handle removing a custom slot
-  const removeCustomSlot = (index) => {
-    const updatedSlots = customSlots.filter((_, i) => i !== index);
-    setCustomSlots(updatedSlots);
-    setTeamOrder(updatedSlots.map((_, i) => i));
-    setPurchasedTeams({});
-  };
-  
+  const removeCustomSlot = useCallback((index) => {
+    setCustomSlots(prev => {
+      const updatedSlots = prev.filter((_, i) => i !== index);
+      setTeamOrder(updatedSlots.map((_, i) => i));
+      setPurchasedTeams({});
+      return updatedSlots;
+    });
+  }, []);
+
   // Handle clearing all custom slots
-  const clearCustomSlots = () => {
+  const clearCustomSlots = useCallback(() => {
     setCustomSlots([]);
     setTeamOrder([]);
     setPurchasedTeams({});
-  };
-  
-  const shuffleTeams = () => {
-    const newOrder = [...teamOrder];
-    for (let i = newOrder.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newOrder[i], newOrder[j]] = [newOrder[j], newOrder[i]];
-    }
-    setTeamOrder(newOrder);
-  };
+  }, []);
+
+  const shuffleTeams = useCallback(() => {
+    setTeamOrder(prev => {
+      const newOrder = [...prev];
+      for (let i = newOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newOrder[i], newOrder[j]] = [newOrder[j], newOrder[i]];
+      }
+      return newOrder;
+    });
+  }, []);
   
   useEffect(() => {
     if (!sceneRef.current) return;
@@ -552,87 +507,63 @@ function Dashboard() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, purchasedTeams, streamOverlay, showResetConfirm, showCategoryConfirm, shuffleTeams, setStreamOverlayFading, setStreamOverlay, setShowResetConfirm, setShowCategoryConfirm, setPendingCategory, setActiveTab]);
-  
-  const categories = {
-    nba: { label: 'NBA Basketball', boxes: 30 },
-    mlb: { label: 'MLB Baseball', boxes: 30 },
-    nfl: { label: 'NFL Football', boxes: 32 },
-    custom: { label: 'Custom Slots', boxes: 0 }
-  };
-  
-  const boxes = category === 'custom' ? customSlots.length : categories[category].boxes;
-  
-const tabs = [
-    { id: 0, label: 'Scene', icon: '■' },
-    { id: 1, label: 'Entry', icon: '◉' },
-    { id: 2, label: 'Trade', icon: '↹' },
-    { id: 3, label: 'Export', icon: '↓' },
-    { id: 4, label: 'Help', icon: '?' },
-  ];
+  }, [activeTab, purchasedTeams, streamOverlay, showResetConfirm, showCategoryConfirm, shuffleTeams]);
 
+  const boxes = category === 'custom' ? customSlots.length : categories[category].boxes;
   const availableCount = boxes - Object.keys(purchasedTeams).length;
-  
-  const showClaimOverlay = (teamIndex, buyerName) => {
+
+  const showClaimOverlay = useCallback((teamIndex, buyerName) => {
     setClaimOverlay({ teamIndex, buyerName });
     setTimeout(() => setClaimOverlay(null), 5000);
-  };
-  
-  const showStreamOverlay = (type) => {
+  }, []);
+
+  const showStreamOverlay = useCallback((type) => {
     setStreamOverlay(type);
     setStreamOverlayFading(false);
-    // Start fade out 1 second before end
     setTimeout(() => setStreamOverlayFading(true), (overlayDuration - 1) * 1000);
-    // Remove overlay after fade completes
     setTimeout(() => {
       setStreamOverlay(null);
       setStreamOverlayFading(false);
     }, overlayDuration * 1000);
-  };
-  
-  const handleResetBoard = () => {
+  }, [overlayDuration]);
+
+  const handleResetBoard = useCallback(() => {
     setPurchasedTeams({});
     setTransactionLog([]);
     setBoxNumber(prev => String(parseInt(prev) + 1).padStart(prev.length, '0'));
     setShowResetConfirm(false);
-  };
-  
-  const generateCSVData = () => {
-    // Group teams by buyer
+  }, []);
+
+  const generateCSVData = useCallback(() => {
     const purchasesByBuyer = {};
     Object.entries(purchasedTeams).forEach(([teamIdx, buyer]) => {
       if (!purchasesByBuyer[buyer]) purchasesByBuyer[buyer] = [];
       purchasesByBuyer[buyer].push(parseInt(teamIdx));
     });
-    
-    // Generate CSV rows
+
     const rows = [];
     rows.push(['Box Name', 'Box Number', 'Buyer Name', 'Number of Teams', 'Teams']);
-    
+
     Object.entries(purchasesByBuyer).forEach(([buyer, teamIndices]) => {
       const teamNames = teamIndices.map(idx => currentTeams[idx].name).join('; ');
       rows.push([boxName, boxNumber, buyer, teamIndices.length, teamNames]);
     });
-    
+
     return rows;
-  };
-  
-  const exportToCSV = () => {
+  }, [purchasedTeams, currentTeams, boxName, boxNumber]);
+
+  const exportToCSV = useCallback(() => {
     const rows = generateCSVData();
-    const csvContent = rows.map(row => 
+    const csvContent = rows.map(row =>
       row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
     ).join('\n');
-    
-    // Format date as Mon-DD-YYYY
+
     const now = new Date();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const dateStr = `${months[now.getMonth()]}-${String(now.getDate()).padStart(2, '0')}-${now.getFullYear()}`;
-    
-    // Replace spaces with underscores in box name
     const safeBoxName = boxName.replace(/\s+/g, '_');
-    
     const filename = `Export_${safeBoxName}_${boxNumber}_${dateStr}.csv`;
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -642,19 +573,23 @@ const tabs = [
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-  
-  const handleExportAndReset = () => {
+  }, [generateCSVData, boxName, boxNumber]);
+
+  const handleExportAndReset = useCallback(() => {
     exportToCSV();
     handleResetBoard();
-  };
+  }, [exportToCSV, handleResetBoard]);
 
-  const tabContent = {
-    0: <LayoutContent columns={columns} setColumns={setColumns} category={category} handleCategoryChange={handleCategoryChange} shuffleTeams={shuffleTeams} spacing={spacing} setSpacing={setSpacing} squareBoxes={squareBoxes} setSquareBoxes={setSquareBoxes} showLabels={showLabels} setShowLabels={setShowLabels} roundedCorners={roundedCorners} setRoundedCorners={setRoundedCorners} borders={borders} setBorders={setBorders} swapColors={swapColors} setSwapColors={setSwapColors} chromaBackground={chromaBackground} setChromaBackground={setChromaBackground} sceneTextColor={sceneTextColor} setSceneTextColor={setSceneTextColor} boxName={boxName} setBoxName={setBoxName} boxNumber={boxNumber} setBoxNumber={setBoxNumber} sceneNote={sceneNote} setSceneNote={setSceneNote} showBoxName={showBoxName} setShowBoxName={setShowBoxName} showBoxNumber={showBoxNumber} setShowBoxNumber={setShowBoxNumber} showSceneNote={showSceneNote} setShowSceneNote={setShowSceneNote} showSlotCount={showSlotCount} setShowSlotCount={setShowSlotCount} slotCounterText={slotCounterText} setSlotCounterText={setSlotCounterText} sceneTextSize={sceneTextSize} setSceneTextSize={setSceneTextSize} boxes={boxes} purchasedTeams={purchasedTeams} availableCount={availableCount} isCustomMode={isCustomMode} customSlots={customSlots} addCustomSlots={addCustomSlots} removeCustomSlot={removeCustomSlot} clearCustomSlots={clearCustomSlots} customSlotsHeight={customSlotsHeight} handleCustomSlotsDragStart={handleCustomSlotsDragStart} isCustomSlotsDragging={isCustomSlotsDragging} videoOverlay={videoOverlay} setVideoOverlay={setVideoOverlay} />,
-    1: <BuyerEntryContent teams={currentTeams} teamOrder={teamOrder} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} showClaimOverlay={showClaimOverlay} showStreamOverlay={showStreamOverlay} setStreamOverlay={setStreamOverlay} setStreamOverlayFading={setStreamOverlayFading} overlayDuration={overlayDuration} setOverlayDuration={setOverlayDuration} category={category} isCustomMode={isCustomMode} addLogEntry={addLogEntry} />,
-    2: <TradeMachineContent teams={currentTeams} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} addLogEntry={addLogEntry} />,
-    3: <ExportContent boxName={boxName} boxNumber={boxNumber} purchasedTeams={purchasedTeams} teams={currentTeams} exportToCSV={exportToCSV} generateCSVData={generateCSVData} transactionLog={transactionLog} logExpanded={logExpanded} setLogExpanded={setLogExpanded} setTransactionLog={setTransactionLog} />,
-    4: <HelpContent />,
+  // Lazy tab rendering - only render the active tab
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 0: return <LayoutContent columns={columns} setColumns={setColumns} category={category} handleCategoryChange={handleCategoryChange} shuffleTeams={shuffleTeams} spacing={spacing} setSpacing={setSpacing} squareBoxes={squareBoxes} setSquareBoxes={setSquareBoxes} showLabels={showLabels} setShowLabels={setShowLabels} roundedCorners={roundedCorners} setRoundedCorners={setRoundedCorners} borders={borders} setBorders={setBorders} swapColors={swapColors} setSwapColors={setSwapColors} chromaBackground={chromaBackground} setChromaBackground={setChromaBackground} sceneTextColor={sceneTextColor} setSceneTextColor={setSceneTextColor} boxName={boxName} setBoxName={setBoxName} boxNumber={boxNumber} setBoxNumber={setBoxNumber} sceneNote={sceneNote} setSceneNote={setSceneNote} showBoxName={showBoxName} setShowBoxName={setShowBoxName} showBoxNumber={showBoxNumber} setShowBoxNumber={setShowBoxNumber} showSceneNote={showSceneNote} setShowSceneNote={setShowSceneNote} showSlotCount={showSlotCount} setShowSlotCount={setShowSlotCount} slotCounterText={slotCounterText} setSlotCounterText={setSlotCounterText} sceneTextSize={sceneTextSize} setSceneTextSize={setSceneTextSize} boxes={boxes} purchasedTeams={purchasedTeams} availableCount={availableCount} isCustomMode={isCustomMode} customSlots={customSlots} addCustomSlots={addCustomSlots} removeCustomSlot={removeCustomSlot} clearCustomSlots={clearCustomSlots} customSlotsHeight={customSlotsHeight} handleCustomSlotsDragStart={handleCustomSlotsDragStart} isCustomSlotsDragging={isCustomSlotsDragging} videoOverlay={videoOverlay} setVideoOverlay={setVideoOverlay} />;
+      case 1: return <BuyerEntryContent teams={currentTeams} teamOrder={teamOrder} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} showClaimOverlay={showClaimOverlay} showStreamOverlay={showStreamOverlay} setStreamOverlay={setStreamOverlay} setStreamOverlayFading={setStreamOverlayFading} overlayDuration={overlayDuration} setOverlayDuration={setOverlayDuration} category={category} isCustomMode={isCustomMode} addLogEntry={addLogEntry} />;
+      case 2: return <TradeMachineContent teams={currentTeams} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} addLogEntry={addLogEntry} />;
+      case 3: return <ExportContent boxName={boxName} boxNumber={boxNumber} purchasedTeams={purchasedTeams} teams={currentTeams} exportToCSV={exportToCSV} generateCSVData={generateCSVData} transactionLog={transactionLog} logExpanded={logExpanded} setLogExpanded={setLogExpanded} setTransactionLog={setTransactionLog} />;
+      case 4: return <HelpContent />;
+      default: return null;
+    }
   };
 
   return (
@@ -817,12 +752,6 @@ select option {
           --scene-text: #ffffff;
           --scene-text-border: rgba(255, 255, 255, 0.8);
         }
-        
-        .theme-dark
-        
-        .theme-light
-        
-        .theme-light
         
         input[type="range"] {
           -webkit-appearance: none;
@@ -1919,15 +1848,16 @@ select option {
             const team = currentTeams[teamIndex];
             const isPurchased = purchasedTeams[teamIndex] !== undefined;
             const buyerName = purchasedTeams[teamIndex];
-            
+            const useExplicitWidth = explicitWidth !== null;
+
             // Custom mode: only show label, no logo box
             if (isCustomMode) {
               const customLabelBg = isPurchased ? '#3a3a3a' : team.primary;
               const preferredTextColor = isPurchased ? '#9ca3af' : team.secondary;
               const customLabelColor = getContrastColor(customLabelBg, preferredTextColor);
-              
+
               return (
-                <div key={i} style={{ width: '100%', position: 'relative' }}>
+                <div key={i} style={{ width: useExplicitWidth ? `${explicitWidth}px` : '100%', position: 'relative' }}>
                   <div 
                     className="team-label"
                     style={{
@@ -1987,12 +1917,22 @@ select option {
             const labelColor = getContrastColor(labelBg, preferredTextColor);
             
             let boxSize, wrapperStyle;
-            
-            if (squareBoxes && squareSize > 0) {
-              boxSize = {
-                width: `${squareSize}px`,
-                height: `${squareSize}px`
+
+            if (useExplicitWidth) {
+              const boxWidth = squareBoxes && squareSize > 0 ? squareSize : explicitWidth;
+              const boxHeight = squareBoxes && squareSize > 0 ? squareSize : 48;
+              boxSize = { width: '100%', height: `${boxHeight}px` };
+              wrapperStyle = {
+                width: `${boxWidth}px`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                border: wrapperBorder,
+                borderRadius: borderRadius,
+                overflow: 'hidden'
               };
+            } else if (squareBoxes && squareSize > 0) {
+              boxSize = { width: `${squareSize}px`, height: `${squareSize}px` };
               wrapperStyle = {
                 display: 'flex',
                 flexDirection: 'column',
@@ -2002,10 +1942,7 @@ select option {
                 overflow: 'hidden'
               };
             } else {
-              boxSize = {
-                width: '100%',
-                height: '3rem'
-              };
+              boxSize = { width: '100%', height: '3rem' };
               wrapperStyle = {
                 width: '100%',
                 display: 'flex',
@@ -2033,9 +1970,10 @@ select option {
                   }}
                 >
                   {team.logo ? (
-                    <img 
-                      src={team.logo} 
+                    <img
+                      src={team.logo}
                       alt={team.name}
+                      loading="lazy"
                       style={{
                         width: squareBoxes ? '80%' : '70%',
                         height: squareBoxes ? '80%' : '100%',
@@ -2229,180 +2167,6 @@ select option {
               marginTop: `${gapSize}rem`,
             };
             
-            // Render box for last row with explicit width
-            const renderLastRowBox = (teamIndex, i) => {
-              const team = currentTeams[teamIndex];
-              const isPurchased = purchasedTeams[teamIndex] !== undefined;
-              const buyerName = purchasedTeams[teamIndex];
-              
-              // Custom mode: only show label, no logo box
-              if (isCustomMode) {
-                const customLabelBg = isPurchased ? '#3a3a3a' : team.primary;
-                const preferredTextColor = isPurchased ? '#9ca3af' : team.secondary;
-                const customLabelColor = getContrastColor(customLabelBg, preferredTextColor);
-                const boxWidth = nonSquareBoxWidth;
-                
-                return (
-                  <div key={i} style={{ width: `${boxWidth}px`, position: 'relative' }}>
-                    <div 
-                      className="team-label"
-                      style={{
-                        width: '100%',
-                        height: '2.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: customLabelBg,
-                        color: customLabelColor,
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                        fontWeight: 700,
-                        fontSize: '1rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        borderRadius: roundedCorners ? '0.375rem' : '0',
-                        position: 'relative'
-                      }}
-                    >
-                      {isPurchased ? buyerName : team.name}
-                      {isPurchased && (
-                        <svg 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="#6cec35" 
-                          strokeWidth="4" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          style={{ 
-                            position: 'absolute',
-                            right: '0.5rem',
-                            width: '1rem',
-                            height: '1rem',
-                            filter: 'drop-shadow(0 0.0625rem 0.125rem rgba(0,0,0,0.3))'
-                          }}
-                        >
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-              
-              const borderRadius = roundedCorners ? '0.5rem' : '0';
-              const borderColor = swapColors ? team.primary : team.secondary;
-              const wrapperBorder = borders ? `0.125rem solid ${isPurchased ? '#3a3a3a' : borderColor}` : 'none';
-              // Only apply inner border radius when there's no wrapper border
-              const innerBorderRadius = borders ? '0' : borderRadius;
-              
-              const boxBg = isPurchased ? '#2a2a2a' : (swapColors ? team.secondary : team.primary);
-              const labelBg = isPurchased ? '#3a3a3a' : (swapColors ? team.primary : team.secondary);
-              const preferredTextColor = isPurchased ? '#9ca3af' : (swapColors ? team.secondary : team.primary);
-              const labelColor = getContrastColor(labelBg, preferredTextColor);
-              
-              const boxWidth = squareBoxes && squareSize > 0 ? squareSize : nonSquareBoxWidth;
-              const boxHeight = squareBoxes && squareSize > 0 ? squareSize : 48; // 3rem = 48px
-              
-              return (
-                <div key={i} style={{
-                  width: `${boxWidth}px`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  border: wrapperBorder,
-                  borderRadius: borderRadius,
-                  overflow: 'hidden'
-                }}>
-                  <div 
-                    className="scene-box"
-                    style={{
-                      width: '100%',
-                      height: `${boxHeight}px`,
-                      background: boxBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      borderRadius: showLabels ? `${innerBorderRadius} ${innerBorderRadius} 0 0` : innerBorderRadius,
-                      position: 'relative'
-                    }}
-                  >
-                    {team.logo ? (
-                      <img 
-                        src={team.logo} 
-                        alt={team.name}
-                        style={{
-                          width: squareBoxes ? '80%' : '70%',
-                          height: squareBoxes ? '80%' : '100%',
-                          objectFit: squareBoxes ? 'contain' : 'cover',
-                          opacity: isPurchased ? 0.3 : 1,
-                          filter: isPurchased ? 'grayscale(100%)' : 'none'
-                        }}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span style={{
-                        fontSize: '1.5rem',
-                        opacity: isPurchased ? 0.3 : 0.7
-                      }}>
-                        {team.abbr}
-                      </span>
-                    )}
-                    {isPurchased && (
-                      <svg 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="#6cec35" 
-                        strokeWidth="4" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        style={{ 
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          width: '50%',
-                          height: '50%',
-                          filter: 'drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.5))'
-                        }}
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    )}
-                  </div>
-                  {showLabels && (
-                    <div 
-                      className="team-label"
-                      style={{
-                        width: '100%',
-                        height: `${labelHeight}rem`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: labelBg,
-                        color: labelColor,
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                        fontWeight: 700,
-                        fontSize: '0.8125rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        borderRadius: `0 0 ${innerBorderRadius} ${innerBorderRadius}`
-                      }}
-                    >
-                      {isPurchased ? buyerName : team.name}
-                    </div>
-                  )}
-                </div>
-              );
-            };
-            
             return (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                 <div 
@@ -2447,7 +2211,7 @@ select option {
                     </div>
                   )}
                   <div style={lastRowFlexStyle}>
-                    {lastRowTeams.map((placement) => renderLastRowBox(placement.teamIndex, placement.originalIndex))}
+                    {lastRowTeams.map((placement) => renderBox(placement.teamIndex, placement.originalIndex, nonSquareBoxWidth))}
                   </div>
                   {hasFooterText && (
                     <div style={{ width: `${gridWidth}px` }}>
@@ -2573,9 +2337,10 @@ select option {
                   filter: 'drop-shadow(0 0.5rem 2rem rgba(0,0,0,0.4))',
                   animation: 'logoPopIn 0.5s ease-out 0.2s both'
                 }}>
-                  <img 
-                    src={team.logo} 
+                  <img
+                    src={team.logo}
                     alt={team.name}
+                    loading="lazy"
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 </div>
@@ -3232,7 +2997,7 @@ select option {
           </button>
 
           <div className="tab-content" key={activeTab}>
-            {tabContent[activeTab]}
+            {renderActiveTab()}
           </div>
           
           {/* Ad Space */}
@@ -3758,7 +3523,7 @@ select option {
   );
 }
 
-function LayoutContent({ columns, setColumns, category, handleCategoryChange, shuffleTeams, spacing, setSpacing, squareBoxes, setSquareBoxes, showLabels, setShowLabels, roundedCorners, setRoundedCorners, borders, setBorders, swapColors, setSwapColors, chromaBackground, setChromaBackground, sceneTextColor, setSceneTextColor, boxName, setBoxName, boxNumber, setBoxNumber, sceneNote, setSceneNote, showBoxName, setShowBoxName, showBoxNumber, setShowBoxNumber, showSceneNote, setShowSceneNote, showSlotCount, setShowSlotCount, slotCounterText, setSlotCounterText, sceneTextSize, setSceneTextSize, boxes, purchasedTeams, availableCount, isCustomMode, customSlots, addCustomSlots, removeCustomSlot, clearCustomSlots, customSlotsHeight, handleCustomSlotsDragStart, isCustomSlotsDragging, videoOverlay, setVideoOverlay }) {
+const LayoutContent = React.memo(function LayoutContent({ columns, setColumns, category, handleCategoryChange, shuffleTeams, spacing, setSpacing, squareBoxes, setSquareBoxes, showLabels, setShowLabels, roundedCorners, setRoundedCorners, borders, setBorders, swapColors, setSwapColors, chromaBackground, setChromaBackground, sceneTextColor, setSceneTextColor, boxName, setBoxName, boxNumber, setBoxNumber, sceneNote, setSceneNote, showBoxName, setShowBoxName, showBoxNumber, setShowBoxNumber, showSceneNote, setShowSceneNote, showSlotCount, setShowSlotCount, slotCounterText, setSlotCounterText, sceneTextSize, setSceneTextSize, boxes, purchasedTeams, availableCount, isCustomMode, customSlots, addCustomSlots, removeCustomSlot, clearCustomSlots, customSlotsHeight, handleCustomSlotsDragStart, isCustomSlotsDragging, videoOverlay, setVideoOverlay }) {
   const [collapsed, setCollapsed] = useState(false);
   
   return (
@@ -4375,9 +4140,9 @@ function LayoutContent({ columns, setColumns, category, handleCategoryChange, sh
       )}
     </div>
   );
-}
+});
 
-function SceneTextContent({ boxName, setBoxName, boxNumber, setBoxNumber, sceneNote, setSceneNote, showBoxName, setShowBoxName, showBoxNumber, setShowBoxNumber, showSceneNote, setShowSceneNote, showSlotCount, setShowSlotCount, slotCounterText, setSlotCounterText, sceneTextSize, setSceneTextSize, boxes }) {
+const SceneTextContent = React.memo(function SceneTextContent({ boxName, setBoxName, boxNumber, setBoxNumber, sceneNote, setSceneNote, showBoxName, setShowBoxName, showBoxNumber, setShowBoxNumber, showSceneNote, setShowSceneNote, showSlotCount, setShowSlotCount, slotCounterText, setSlotCounterText, sceneTextSize, setSceneTextSize, boxes }) {
   const [collapsed, setCollapsed] = useState(false);
   
   // Reusable toggle button component
@@ -4612,9 +4377,9 @@ function SceneTextContent({ boxName, setBoxName, boxNumber, setBoxNumber, sceneN
       )}
     </div>
   );
-}
+});
 
-function VideoOverlayContent({ videoOverlay, setVideoOverlay, columns, boxes }) {
+const VideoOverlayContent = React.memo(function VideoOverlayContent({ videoOverlay, setVideoOverlay, columns, boxes }) {
   const [manualCollapsed, setManualCollapsed] = useState(false);
   
   // When OFF, always collapsed. When ON, respect manual collapsed state
@@ -4898,9 +4663,9 @@ function VideoOverlayContent({ videoOverlay, setVideoOverlay, columns, boxes }) 
       )}
     </div>
   );
-}
+});
 
-function CustomSlotsContent({ customSlots, addCustomSlots, removeCustomSlot, clearCustomSlots, customSlotsHeight, handleCustomSlotsDragStart, isCustomSlotsDragging }) {
+const CustomSlotsContent = React.memo(function CustomSlotsContent({ customSlots, addCustomSlots, removeCustomSlot, clearCustomSlots, customSlotsHeight, handleCustomSlotsDragStart, isCustomSlotsDragging }) {
   const [collapsed, setCollapsed] = useState(false);
   const [inputText, setInputText] = useState('');
   
@@ -5130,9 +4895,9 @@ function CustomSlotsContent({ customSlots, addCustomSlots, removeCustomSlot, cle
       )}
     </div>
   );
-}
+});
 
-function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams, showClaimOverlay, showStreamOverlay, setStreamOverlay, setStreamOverlayFading, overlayDuration, setOverlayDuration, category, isCustomMode, addLogEntry }) {
+const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams, showClaimOverlay, showStreamOverlay, setStreamOverlay, setStreamOverlayFading, overlayDuration, setOverlayDuration, category, isCustomMode, addLogEntry }) {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [buyerName, setBuyerName] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -5319,7 +5084,7 @@ function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                onKeyPress={(e) => e.key === 'Enter' && handlePurchase()}
+                onKeyDown={(e) => e.key === 'Enter' && handlePurchase()}
                 placeholder="Enter buyer's name..."
                 autoComplete="off"
                 style={{
@@ -5694,9 +5459,10 @@ function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams
                             overflow: 'hidden',
                             flexShrink: 0
                           }}>
-                            <img 
-                              src={team.logo} 
+                            <img
+                              src={team.logo}
                               alt={team.name}
+                              loading="lazy"
                               style={{ width: '80%', height: '80%', objectFit: 'contain' }}
                               onError={(e) => e.target.style.display = 'none'}
                             />
@@ -5964,9 +5730,9 @@ function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams
       )}
     </div>
   );
-}
+});
 
-function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogEntry }) {
+const TradeMachineContent = React.memo(function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogEntry }) {
   const [leftBuyer, setLeftBuyer] = useState('');
   const [leftTeams, setLeftTeams] = useState([]);
   const [rightBuyer, setRightBuyer] = useState('');
@@ -6106,9 +5872,10 @@ function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogE
                 overflow: 'hidden',
                 flexShrink: 0
               }}>
-                <img 
-                  src={team.logo} 
+                <img
+                  src={team.logo}
                   alt={team.name}
+                  loading="lazy"
                   style={{ width: '80%', height: '80%', objectFit: 'contain' }}
                   onError={(e) => e.target.style.display = 'none'}
                 />
@@ -6490,9 +6257,9 @@ function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogE
       )}
     </div>
   );
-}
+});
 
-function ExportContent({ boxName, boxNumber, purchasedTeams, teams, exportToCSV, generateCSVData, transactionLog, logExpanded, setLogExpanded, setTransactionLog }) {
+const ExportContent = React.memo(function ExportContent({ boxName, boxNumber, purchasedTeams, teams, exportToCSV, generateCSVData, transactionLog, logExpanded, setLogExpanded, setTransactionLog }) {
   // Group teams by buyer for preview
   const purchasesByBuyer = {};
   Object.entries(purchasedTeams).forEach(([teamIdx, buyer]) => {
@@ -6856,9 +6623,9 @@ function ExportContent({ boxName, boxNumber, purchasedTeams, teams, exportToCSV,
       </div>
     </div>
   );
-}
+});
 
-function HelpContent() {
+const HelpContent = React.memo(function HelpContent() {
   const [expandedSection, setExpandedSection] = useState(null);
   const [toolGuideCollapsed, setToolGuideCollapsed] = useState(true);
   const [faqCollapsed, setFaqCollapsed] = useState(true);
@@ -7289,7 +7056,7 @@ function HelpContent() {
       
     </div>
   );
-}
+});
 
 // Expose Dashboard globally for rendering
 window.Dashboard = Dashboard;
