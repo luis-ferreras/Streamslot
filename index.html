@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>StreamSlot - Built for Card Streamers to Manage Card Breaks</title>
   <meta name="description" content="Free OBS-ready dashboard for trading card box breaks. NBA, MLB, NFL team boards with randomizer and trade machine.">
   <link rel="apple-touch-icon" sizes="180x180" href="https://luis-ferreras.github.io/streamslot/images/apple-touch-icon.png">
@@ -30,15 +30,15 @@
   
 <body>
 
-  <div id="mobile-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); z-index: 99999; align-items: center; justify-content: center; padding: 2rem;">
-    <div style="background: #1a1a1a; padding: 2rem; max-width: 400px; text-align: center;">
+  <div id="mobile-modal" onclick="if(event.target===this)this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); z-index: 99999; align-items: center; justify-content: center; padding: 1.5rem; padding-top: calc(1.5rem + env(safe-area-inset-top, 0px)); padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
+    <div style="background: #1a1a1a; padding: 2rem; max-width: 400px; width: 100%; text-align: center; border: 1px solid #333;">
       <div style="font-size: 3rem; margin-bottom: 1rem;">💻</div>
-      <h2 style="color: #fe68ff; margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 700;">Desktop Recommended</h2>
-      <p style="color: #fff; margin: 0 0 1.5rem 0; font-size: 0.875rem; line-height: 1.5;">
-        StreamSlot is optimized for desktop and tablet screens. While it works on mobile, you'll have the best experience on a larger screen.
+      <h2 style="color: #fe68ff; margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 700; font-family: 'Space Mono', monospace;">Desktop Recommended</h2>
+      <p style="color: #ccc; margin: 0 0 1.5rem 0; font-size: 0.875rem; line-height: 1.6; font-family: 'Space Mono', monospace;">
+        StreamSlot is designed for desktop browsers. The mobile experience is functional but limited.
       </p>
-      <button onclick="document.getElementById('mobile-modal').style.display='none'" 
-        style="background: #442544; color: #fe68ff; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-weight: 700; font-size: 0.875rem; cursor: pointer; text-transform: uppercase; width: 100%;">
+      <button onclick="document.getElementById('mobile-modal').style.display='none'"
+        style="background: #442544; color: #fe68ff; border: none; padding: 0.875rem 1.5rem; border-radius: 0; font-weight: 700; font-size: 0.875rem; cursor: pointer; text-transform: uppercase; width: 100%; font-family: 'Space Mono', monospace; min-height: 2.75rem;">
         Proceed Anyway
       </button>
     </div>
