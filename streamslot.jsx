@@ -165,6 +165,66 @@ const tabs = [
 
 // Reusable SVG logo component
 const StreamSlotLogo = () => (
+
+// Pre-generated confetti particle properties (avoids Math.random() in render)
+const CLAIM_CONFETTI = Array.from({ length: 20 }, (_, i) => ({
+  width: 0.5 + ((i * 7 + 3) % 10) / 13.33,
+  left: ((i * 37 + 13) % 100),
+  duration: 1.5 + ((i * 11 + 5) % 15) / 10,
+  delay: ((i * 17 + 7) % 10) / 20
+}));
+
+const STREAM_CONFETTI = Array.from({ length: 15 }, (_, i) => ({
+  width: 0.5 + ((i * 11 + 3) % 10) / 20,
+  left: ((i * 41 + 17) % 100),
+  duration: 2 + ((i * 13 + 7) % 20) / 10,
+  delay: ((i * 19 + 11) % 16) / 20
+}));
+
+// Static randomizer color pairs for custom mode
+const generateRandomColor = (seed) => {
+  const hue = (seed * 137.5) % 360;
+  const saturation = 60 + (seed * 7) % 30;
+  const lightness = 45 + (seed * 11) % 20;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+const RANDOMIZER_COLOR_PAIRS = Array.from({ length: 20 }, (_, i) => ({
+  primary: generateRandomColor(i * 3),
+  secondary: generateRandomColor(i * 3 + 1)
+}));
+
+// Static overlay configurations (no dynamic values)
+const OVERLAY_CONFIGS_STATIC = {
+  pyt: {
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
+    icon: '🎯',
+    title: 'Pick Your Team'
+  },
+  stashpass: {
+    gradient: 'linear-gradient(135deg, #314417 0%, #1a1a2e 50%, #3f230e 100%)',
+    icon: '',
+    title: 'OR',
+    isStashPass: true
+  },
+  '2spins': {
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #f59e0b 100%)',
+    icon: '🎰',
+    title: 'Spin 2, Keep 1'
+  },
+  randomizer: {
+    gradient: 'linear-gradient(135deg, #463a14 0%, #1a1a2e 50%, #463a14 100%)',
+    icon: '',
+    title: '',
+    isRandomizer: true
+  }
+};
+
+const SPORT_ICONS = { nba: '🏀', mlb: '⚾', nfl: '🏈', custom: '🔥' };
+
+const RANDOMIZER_COLUMNS = 5;
+
+const StreamSlotLogo = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
     <rect width="20" height="20" rx="4" fill="#442544"/>
     <rect x="3" y="3" width="6" height="6" rx="1" fill="#fe68ff"/>
@@ -2310,20 +2370,20 @@ select option {
               animation: 'claimOverlayIn 0.4s ease-out'
             }}>
               {/* Confetti particles */}
-              {[...Array(20)].map((_, i) => (
+              {CLAIM_CONFETTI.map((p, i) => (
                 <div
                   key={i}
                   style={{
                     position: 'absolute',
-                    width: `${0.5 + Math.random() * 0.75}rem`,
-                    height: `${0.5 + Math.random() * 0.75}rem`,
+                    width: `${p.width}rem`,
+                    height: `${p.width}rem`,
                     background: i % 2 === 0 ? '#fff' : (i % 3 === 0 ? team.primary : team.secondary),
                     borderRadius: i % 3 === 0 ? '50%' : '0.125rem',
-                    left: `${Math.random() * 100}%`,
+                    left: `${p.left}%`,
                     top: '-1rem',
                     opacity: 0.8,
-                    animation: `confettiFall ${1.5 + Math.random() * 1.5}s ease-out forwards`,
-                    animationDelay: `${Math.random() * 0.5}s`
+                    animation: `confettiFall ${p.duration}s ease-out forwards`,
+                    animationDelay: `${p.delay}s`
                   }}
                 />
               ))}
@@ -2403,46 +2463,16 @@ select option {
         
         {/* Stream Overlays */}
         {streamOverlay && (() => {
-          // Get sport-specific icon for Live overlay
-          const sportIcons = { nba: '🏀', mlb: '⚾', nfl: '🏈', custom: '🔥' };
-          const liveIcon = sportIcons[category] || '🏀';
-          
-          const overlayConfigs = {
-            live: {
-              gradient: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 50%, #000000 100%)',
-              icon: liveIcon,
-              title: 'Live @ $1',
-              hasGreenPrice: true
-            },
-            pyt: {
-              gradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
-              icon: '🎯',
-              title: 'Pick Your Team'
-            },
-            stashpass: {
-              gradient: 'linear-gradient(135deg, #314417 0%, #1a1a2e 50%, #3f230e 100%)',
-              icon: '',
-              title: 'OR',
-              isStashPass: true
-            },
-            '2spins': {
-              gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #f59e0b 100%)',
-              icon: '🎰',
-              title: 'Spin 2, Keep 1'
-            },
-            randomizer: {
-              gradient: 'linear-gradient(135deg, #463a14 0%, #1a1a2e 50%, #463a14 100%)',
-              icon: '',
-              title: '',
-              isRandomizer: true
-            }
-          };
-          
-          const config = overlayConfigs[streamOverlay];
+          const liveIcon = SPORT_ICONS[category] || '🏀';
+
+          // Build config: live needs the dynamic sport icon, rest are static
+          const config = streamOverlay === 'live'
+            ? { gradient: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 50%, #000000 100%)', icon: liveIcon, title: 'Live @ $1', hasGreenPrice: true }
+            : OVERLAY_CONFIGS_STATIC[streamOverlay];
           if (!config) return null;
-          
+
           // Get remaining (unpurchased) teams for 'live' overlay
-          const remainingTeams = streamOverlay === 'live' 
+          const remainingTeams = streamOverlay === 'live'
             ? teamOrder.filter((_, idx) => !purchasedTeams[idx]).map(idx => currentTeams[idx])
             : [];
           
@@ -2532,7 +2562,7 @@ select option {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    animation: 'slideInLeft 0.4s ease-out'
+                    animation: 'stashSlideLeft 0.4s ease-out'
                   }}>
                     <div className="stash-pass-text" style={{
                       fontFamily: "'Barlow Condensed', sans-serif",
@@ -2556,7 +2586,7 @@ select option {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    animation: 'slideInRight 0.4s ease-out'
+                    animation: 'stashSlideRight 0.4s ease-out'
                   }}>
                     <div className="stash-pass-text" style={{
                       fontFamily: "'Barlow Condensed', sans-serif",
@@ -2571,30 +2601,16 @@ select option {
                 </>
               )}
               
-              {/* Randomizer overlay - Slot Machine Style */}
-              
-              {/* Randomizer - Custom Mode */}
-              {streamOverlay === 'randomizer' && isCustomMode && (() => {
-                const columns = 5;
-                
-                // Generate random vibrant colors for slot machine
-                const generateRandomColor = (seed) => {
-                  const hue = (seed * 137.5) % 360; // Golden angle for good distribution
-                  const saturation = 60 + (seed * 7) % 30; // 60-90%
-                  const lightness = 45 + (seed * 11) % 20; // 45-65%
-                  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-                };
-                
-                // Create array of color pairs for gradients
-                const colorPairs = Array.from({ length: 20 }, (_, i) => ({
-                  primary: generateRandomColor(i * 3),
-                  secondary: generateRandomColor(i * 3 + 1)
-                }));
-                
+              {/* Randomizer overlay - Slot Machine Style (unified for custom + sports mode) */}
+              {streamOverlay === 'randomizer' && (() => {
+                const slotColors = isCustomMode
+                  ? RANDOMIZER_COLOR_PAIRS
+                  : teamOrder.filter(idx => !purchasedTeams[idx]).map(idx => ({ primary: currentTeams[idx].primary, secondary: currentTeams[idx].secondary }));
+
                 return (
                   <>
                     {/* Slot machine reels */}
-                    {[...Array(columns)].map((_, colIndex) => (
+                    {[...Array(RANDOMIZER_COLUMNS)].map((_, colIndex) => (
                       <div
                         key={colIndex}
                         style={{
@@ -2609,7 +2625,6 @@ select option {
                           background: 'rgba(0, 0, 0, 0.4)'
                         }}
                       >
-                        {/* Spinning column of random colors */}
                         <div
                           style={{
                             display: 'flex',
@@ -2618,9 +2633,8 @@ select option {
                             position: 'relative'
                           }}
                         >
-                          {/* Repeat colors multiple times for seamless loop */}
                           {[...Array(4)].map((_, repeatIndex) => (
-                            colorPairs.map((colors, colorIndex) => (
+                            slotColors.map((colors, colorIndex) => (
                               <div
                                 key={`${repeatIndex}-${colorIndex}`}
                                 style={{
@@ -2639,8 +2653,8 @@ select option {
                         </div>
                       </div>
                     ))}
-                    
-                    {/* Loading bar container - centered (accounting for bottom gap) */}
+
+                    {/* Loading bar */}
                     <div
                       style={{
                         position: 'absolute',
@@ -2658,95 +2672,6 @@ select option {
                         overflow: 'hidden'
                       }}
                     >
-                      {/* Loading bar fill */}
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'linear-gradient(90deg, #ffd401 0%, #ffed4e 50%, #ffd401 100%)',
-                          transformOrigin: 'left',
-                          animation: 'loadingBarFill 2s linear forwards',
-                          boxShadow: '0 0 1rem rgba(255, 212, 1, 0.8)'
-                        }}
-                      />
-                    </div>
-                  </>
-                );
-              })()}
-              
-              {/* Randomizer - Sports Mode */}
-              {streamOverlay === 'randomizer' && !isCustomMode && (() => {
-                const availableTeamsList = teamOrder.filter(idx => !purchasedTeams[idx]).map(idx => currentTeams[idx]);
-                const columns = 5;
-                
-                return (
-                  <>
-                    {/* Slot machine reels */}
-                    {[...Array(columns)].map((_, colIndex) => (
-                      <div
-                        key={colIndex}
-                        style={{
-                          position: 'absolute',
-                          left: `${12 + colIndex * 16}%`,
-                          top: 'calc(20% - 0.5rem)',
-                          width: '12%',
-                          height: '60%',
-                          overflow: 'hidden',
-                          border: '0.25rem solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: 0,
-                          background: 'rgba(0, 0, 0, 0.4)'
-                        }}
-                      >
-                        {/* Spinning column of team colors */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            animation: `slotSpin ${2 + colIndex * 0.3}s linear infinite`,
-                            position: 'relative'
-                          }}
-                        >
-                          {/* Repeat teams multiple times for seamless loop */}
-                          {[...Array(4)].map((_, repeatIndex) => (
-                            availableTeamsList.map((team, teamIndex) => (
-                              <div
-                                key={`${repeatIndex}-${teamIndex}`}
-                                style={{
-                                  width: '100%',
-                                  height: '6rem',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  background: `linear-gradient(135deg, ${team.primary} 0%, ${team.secondary} 100%)`,
-                                  borderBottom: '0.125rem solid rgba(255, 255, 255, 0.2)',
-                                  boxSizing: 'border-box'
-                                }}
-                              />
-                            ))
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Loading bar container - centered (accounting for bottom gap) */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: 'calc(50% - 0.5rem)',
-                        transform: 'translate(-50%, -50%)',
-                        width: '60%',
-                        height: '2.5rem',
-                        background: 'rgba(0, 0, 0, 0.7)',
-                        border: '0.25rem solid #ffd401',
-                        borderRadius: 0,
-                        pointerEvents: 'none',
-                        boxShadow: '0 0 1.5rem rgba(255, 212, 1, 0.6)',
-                        zIndex: 10,
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {/* Loading bar fill */}
                       <div
                         style={{
                           width: '100%',
@@ -2786,20 +2711,20 @@ select option {
               )}
               
               {/* Confetti */}
-              {[...Array(15)].map((_, i) => (
+              {STREAM_CONFETTI.map((p, i) => (
                 <div
                   key={i}
                   style={{
                     position: 'absolute',
-                    width: `${0.5 + Math.random() * 0.5}rem`,
-                    height: `${0.5 + Math.random() * 0.5}rem`,
+                    width: `${p.width}rem`,
+                    height: `${p.width}rem`,
                     background: ['#fe68ff', '#ffd401', '#6cec35', '#2bc2ff', '#ff4e00'][i % 5],
                     borderRadius: i % 3 === 0 ? '50%' : '0.125rem',
-                    left: `${Math.random() * 100}%`,
+                    left: `${p.left}%`,
                     top: '-1rem',
                     opacity: 0.9,
-                    animation: `confettiFall ${2 + Math.random() * 2}s ease-out forwards`,
-                    animationDelay: `${Math.random() * 0.8}s`
+                    animation: `confettiFall ${p.duration}s ease-out forwards`,
+                    animationDelay: `${p.delay}s`
                   }}
                 />
               ))}
