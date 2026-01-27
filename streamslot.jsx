@@ -347,6 +347,64 @@ function Dashboard() {
   const sceneRef = useRef(null);
   const [mobileSceneHidden, setMobileSceneHidden] = useState(true); // Hidden by default on mobile
 
+  // Undo/Redo history system
+  const MAX_HISTORY = 50;
+  const historyStack = useRef([]); // Array of snapshots
+  const historyIndex = useRef(-1); // Current position in stack
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const isUndoRedoing = useRef(false); // Flag to prevent pushing during undo/redo
+
+  const pushSnapshot = useCallback(() => {
+    if (isUndoRedoing.current) return;
+    const snapshot = {
+      purchasedTeams: { ...purchasedTeams },
+      teamOrder: [...teamOrder],
+      transactionLog: [...transactionLog],
+      boxNumber
+    };
+    // Trim any redo states ahead of current position
+    historyStack.current = historyStack.current.slice(0, historyIndex.current + 1);
+    historyStack.current.push(snapshot);
+    // Cap history size
+    if (historyStack.current.length > MAX_HISTORY) {
+      historyStack.current.shift();
+    } else {
+      historyIndex.current++;
+    }
+    setCanUndo(historyIndex.current > 0);
+    setCanRedo(false);
+  }, [purchasedTeams, teamOrder, transactionLog, boxNumber]);
+
+  const undo = useCallback(() => {
+    if (historyIndex.current <= 0) return;
+    isUndoRedoing.current = true;
+    historyIndex.current--;
+    const snapshot = historyStack.current[historyIndex.current];
+    setPurchasedTeams(snapshot.purchasedTeams);
+    setTeamOrder(snapshot.teamOrder);
+    setTransactionLog(snapshot.transactionLog);
+    setBoxNumber(snapshot.boxNumber);
+    setCanUndo(historyIndex.current > 0);
+    setCanRedo(true);
+    // Clear flag after React processes the state updates
+    setTimeout(() => { isUndoRedoing.current = false; }, 0);
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIndex.current >= historyStack.current.length - 1) return;
+    isUndoRedoing.current = true;
+    historyIndex.current++;
+    const snapshot = historyStack.current[historyIndex.current];
+    setPurchasedTeams(snapshot.purchasedTeams);
+    setTeamOrder(snapshot.teamOrder);
+    setTransactionLog(snapshot.transactionLog);
+    setBoxNumber(snapshot.boxNumber);
+    setCanUndo(true);
+    setCanRedo(historyIndex.current < historyStack.current.length - 1);
+    setTimeout(() => { isUndoRedoing.current = false; }, 0);
+  }, []);
+
   // AdSense initialization - script is loaded via index.html
   useEffect(() => {
     try {
@@ -355,6 +413,18 @@ function Dashboard() {
       console.log('AdSense initialization:', err);
     }
   }, []);
+
+  // Seed initial undo history snapshot on mount
+  useEffect(() => {
+    const snapshot = {
+      purchasedTeams: { ...purchasedTeams },
+      teamOrder: [...teamOrder],
+      transactionLog: [...transactionLog],
+      boxNumber
+    };
+    historyStack.current = [snapshot];
+    historyIndex.current = 0;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Shared drag resize logic
   const useDragResize = (isDraggingState, setIsDraggingState, startYRef, startHeightRef, setHeight, min, max, roundFn) => {
@@ -458,6 +528,7 @@ function Dashboard() {
   
   // Handle category change with direct state updates
   const executeCategoryChange = useCallback((newCategory) => {
+    pushSnapshot();
     setCategory(newCategory);
     setPurchasedTeams({});
 
@@ -471,7 +542,7 @@ function Dashboard() {
       const newTeams = allTeams[newCategory] || nbaTeams;
       setTeamOrder(newTeams.map((_, i) => i));
     }
-  }, [customSlots]);
+  }, [customSlots, pushSnapshot]);
 
   const handleCategoryChange = useCallback((newCategory) => {
     if (newCategory === category) return;
@@ -494,52 +565,56 @@ function Dashboard() {
         const parts = line.split(',').map(p => p.trim());
         const name = parts[0];
         if (!name) return null;
-        
+
         let bgColor = '#2a2a2a'; // default dark grey
         let textColor = '#ffffff'; // default white
-        
+
         // Check for background color
         if (parts[1] && isValidHex(parts[1])) {
           bgColor = normalizeHex(parts[1]);
           // Auto-contrast if no text color specified
           textColor = getContrastColor(bgColor);
         }
-        
+
         // Check for explicit text color
         if (parts[2] && isValidHex(parts[2])) {
           textColor = normalizeHex(parts[2]);
         }
-        
+
         return { name, bgColor, textColor };
       })
       .filter(s => s !== null);
-    
+
     if (newSlots.length === 0) return;
 
+    pushSnapshot();
     const updatedSlots = [...customSlots, ...newSlots];
     setCustomSlots(updatedSlots);
     setTeamOrder(updatedSlots.map((_, i) => i));
     setPurchasedTeams({});
-  }, [customSlots]);
+  }, [customSlots, pushSnapshot]);
 
   // Handle removing a custom slot
   const removeCustomSlot = useCallback((index) => {
+    pushSnapshot();
     setCustomSlots(prev => {
       const updatedSlots = prev.filter((_, i) => i !== index);
       setTeamOrder(updatedSlots.map((_, i) => i));
       setPurchasedTeams({});
       return updatedSlots;
     });
-  }, []);
+  }, [pushSnapshot]);
 
   // Handle clearing all custom slots
   const clearCustomSlots = useCallback(() => {
+    pushSnapshot();
     setCustomSlots([]);
     setTeamOrder([]);
     setPurchasedTeams({});
-  }, []);
+  }, [pushSnapshot]);
 
   const shuffleTeams = useCallback(() => {
+    pushSnapshot();
     setTeamOrder(prev => {
       const newOrder = [...prev];
       for (let i = newOrder.length - 1; i > 0; i--) {
@@ -548,7 +623,7 @@ function Dashboard() {
       }
       return newOrder;
     });
-  }, []);
+  }, [pushSnapshot]);
   
   useEffect(() => {
     if (!sceneRef.current) return;
@@ -570,6 +645,20 @@ function Dashboard() {
                             e.target.tagName === 'TEXTAREA' || 
                             e.target.tagName === 'SELECT';
       
+      // Ctrl/Cmd + Z: Undo
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + Z (or Ctrl/Cmd + Y): Redo
+      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && (e.key === 'z' || e.key === 'Z') || e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
       // Ctrl/Cmd + S: Export CSV (prevent browser save dialog)
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
@@ -625,7 +714,7 @@ function Dashboard() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, purchasedTeams, streamOverlay, showResetConfirm, showCategoryConfirm, shuffleTeams]);
+  }, [activeTab, purchasedTeams, streamOverlay, showResetConfirm, showCategoryConfirm, shuffleTeams, undo, redo]);
 
   const boxes = category === 'custom' ? customSlots.length : categories[category].boxes;
   const availableCount = boxes - Object.keys(purchasedTeams).length;
@@ -646,11 +735,12 @@ function Dashboard() {
   }, [overlayDuration]);
 
   const handleResetBoard = useCallback(() => {
+    pushSnapshot();
     setPurchasedTeams({});
     setTransactionLog([]);
     setBoxNumber(prev => String(parseInt(prev) + 1).padStart(prev.length, '0'));
     setShowResetConfirm(false);
-  }, []);
+  }, [pushSnapshot]);
 
   const generateCSVData = useCallback(() => {
     const purchasesByBuyer = {};
@@ -702,8 +792,8 @@ function Dashboard() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 0: return <LayoutContent columns={columns} setColumns={setColumns} category={category} handleCategoryChange={handleCategoryChange} shuffleTeams={shuffleTeams} spacing={spacing} setSpacing={setSpacing} squareBoxes={squareBoxes} setSquareBoxes={setSquareBoxes} showLabels={showLabels} setShowLabels={setShowLabels} roundedCorners={roundedCorners} setRoundedCorners={setRoundedCorners} borders={borders} setBorders={setBorders} swapColors={swapColors} setSwapColors={setSwapColors} chromaBackground={chromaBackground} setChromaBackground={setChromaBackground} sceneTextColor={sceneTextColor} setSceneTextColor={setSceneTextColor} boxName={boxName} setBoxName={setBoxName} boxNumber={boxNumber} setBoxNumber={setBoxNumber} sceneNote={sceneNote} setSceneNote={setSceneNote} showBoxName={showBoxName} setShowBoxName={setShowBoxName} showBoxNumber={showBoxNumber} setShowBoxNumber={setShowBoxNumber} showSceneNote={showSceneNote} setShowSceneNote={setShowSceneNote} showSlotCount={showSlotCount} setShowSlotCount={setShowSlotCount} slotCounterText={slotCounterText} setSlotCounterText={setSlotCounterText} sceneTextSize={sceneTextSize} setSceneTextSize={setSceneTextSize} boxes={boxes} purchasedTeams={purchasedTeams} availableCount={availableCount} isCustomMode={isCustomMode} customSlots={customSlots} addCustomSlots={addCustomSlots} removeCustomSlot={removeCustomSlot} clearCustomSlots={clearCustomSlots} customSlotsHeight={customSlotsHeight} handleCustomSlotsDragStart={handleCustomSlotsDragStart} isCustomSlotsDragging={isCustomSlotsDragging} videoOverlay={videoOverlay} setVideoOverlay={setVideoOverlay} containerSize={containerSize} />;
-      case 1: return <BuyerEntryContent teams={currentTeams} teamOrder={teamOrder} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} showClaimOverlay={showClaimOverlay} showStreamOverlay={showStreamOverlay} setStreamOverlay={setStreamOverlay} setStreamOverlayFading={setStreamOverlayFading} overlayDuration={overlayDuration} setOverlayDuration={setOverlayDuration} category={category} isCustomMode={isCustomMode} addLogEntry={addLogEntry} />;
-      case 2: return <TradeMachineContent teams={currentTeams} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} addLogEntry={addLogEntry} />;
+      case 1: return <BuyerEntryContent teams={currentTeams} teamOrder={teamOrder} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} showClaimOverlay={showClaimOverlay} showStreamOverlay={showStreamOverlay} setStreamOverlay={setStreamOverlay} setStreamOverlayFading={setStreamOverlayFading} overlayDuration={overlayDuration} setOverlayDuration={setOverlayDuration} category={category} isCustomMode={isCustomMode} addLogEntry={addLogEntry} pushSnapshot={pushSnapshot} />;
+      case 2: return <TradeMachineContent teams={currentTeams} purchasedTeams={purchasedTeams} setPurchasedTeams={setPurchasedTeams} addLogEntry={addLogEntry} pushSnapshot={pushSnapshot} />;
       case 3: return <ExportContent boxName={boxName} boxNumber={boxNumber} purchasedTeams={purchasedTeams} teams={currentTeams} exportToCSV={exportToCSV} generateCSVData={generateCSVData} transactionLog={transactionLog} logExpanded={logExpanded} setLogExpanded={setLogExpanded} setTransactionLog={setTransactionLog} />;
       case 4: return <HelpContent />;
       default: return null;
@@ -2944,7 +3034,59 @@ select option {
               ))}
             </div>
             
-            <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                aria-label="Undo (Ctrl+Z)"
+                title="Undo (Ctrl+Z)"
+                onClick={undo}
+                disabled={!canUndo}
+                style={{
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  borderRadius: 0,
+                  border: 'none',
+                  background: canUndo ? '#1a2a3a' : '#1e1e1e',
+                  color: canUndo ? '#60a5fa' : '#555',
+                  fontFamily: 'inherit',
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  cursor: canUndo ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box',
+                  opacity: canUndo ? 1 : 0.4
+                }}
+              >
+                ↩
+              </button>
+              <button
+                aria-label="Redo (Ctrl+Shift+Z)"
+                title="Redo (Ctrl+Shift+Z)"
+                onClick={redo}
+                disabled={!canRedo}
+                style={{
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  borderRadius: 0,
+                  border: 'none',
+                  background: canRedo ? '#1a2a3a' : '#1e1e1e',
+                  color: canRedo ? '#60a5fa' : '#555',
+                  fontFamily: 'inherit',
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  cursor: canRedo ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box',
+                  opacity: canRedo ? 1 : 0.4
+                }}
+              >
+                ↪
+              </button>
               <button
                 aria-label="Reset Board"
                 onClick={() => setShowResetConfirm(true)}
@@ -4953,7 +5095,7 @@ const CustomSlotsContent = React.memo(function CustomSlotsContent({ customSlots,
   );
 });
 
-const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams, showClaimOverlay, showStreamOverlay, setStreamOverlay, setStreamOverlayFading, overlayDuration, setOverlayDuration, category, isCustomMode, addLogEntry }) {
+const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrder, purchasedTeams, setPurchasedTeams, showClaimOverlay, showStreamOverlay, setStreamOverlay, setStreamOverlayFading, overlayDuration, setOverlayDuration, category, isCustomMode, addLogEntry, pushSnapshot }) {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [buyerName, setBuyerName] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -4998,8 +5140,9 @@ const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrd
   
   const handlePurchase = () => {
     if (selectedTeam !== '' && buyerName.trim()) {
+      pushSnapshot();
       const buyer = buyerName.trim();
-      
+
       // Check if randomize was selected
       if (selectedTeam === 'RANDOMIZE') {
         // Pick random team from available
@@ -5050,6 +5193,7 @@ const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrd
   };
   
   const handleUndo = (teamIndex) => {
+    pushSnapshot();
     const teamName = teams[teamIndex]?.name || 'Team';
     setPurchasedTeams(prev => {
       const newState = { ...prev };
@@ -5058,8 +5202,9 @@ const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrd
     });
     addLogEntry(`Undo: ${teamName} returned to available`);
   };
-  
+
   const handleClearAll = () => {
+    pushSnapshot();
     setPurchasedTeams({});
   };
   
@@ -5793,7 +5938,7 @@ const BuyerEntryContent = React.memo(function BuyerEntryContent({ teams, teamOrd
   );
 });
 
-const TradeMachineContent = React.memo(function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogEntry }) {
+const TradeMachineContent = React.memo(function TradeMachineContent({ teams, purchasedTeams, setPurchasedTeams, addLogEntry, pushSnapshot }) {
   const [leftBuyer, setLeftBuyer] = useState('');
   const [leftTeams, setLeftTeams] = useState([]);
   const [rightBuyer, setRightBuyer] = useState('');
@@ -5855,6 +6000,7 @@ const TradeMachineContent = React.memo(function TradeMachineContent({ teams, pur
   
   // Execute trade
   const executeTrade = () => {
+    pushSnapshot();
     if (tradeType === 'respin') {
       // Clear the selected teams (make them available for respin)
       const teamNames = leftTeams.map(idx => teams[idx]?.name || 'Team').join(', ');
@@ -7192,6 +7338,8 @@ const HelpContent = React.memo(function HelpContent() {
       title: 'Keyboard Shortcuts',
       description: 'Speed up your workflow with hotkeys.',
       details: [
+        { label: 'Undo', text: 'Press Ctrl+Z (or Cmd+Z on Mac) to undo the last action (purchases, trades, respins, shuffles, resets).' },
+        { label: 'Redo', text: 'Press Ctrl+Shift+Z (or Cmd+Shift+Z on Mac) to redo an undone action. Also supports Ctrl+Y.' },
         { label: 'Export CSV', text: 'Press Ctrl+S (or Cmd+S on Mac) to quickly export when on the Export tab with purchased teams.' },
         { label: 'Shuffle Teams', text: 'Press Ctrl+Shift+R (or Cmd+Shift+R on Mac) to shuffle with confirmation dialog.' },
         { label: 'Close Overlays', text: 'Press Escape to close stream overlays, reset confirmation, or category change dialogs.' },
