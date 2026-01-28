@@ -62,16 +62,14 @@
 
 <body>
 
-  <div id="mobile-modal" onclick="if(event.target===this)this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); z-index: 99999; align-items: center; justify-content: center; padding: 1.5rem; padding-top: calc(1.5rem + env(safe-area-inset-top, 0px)); padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
-    <div style="background: #1a1a1a; padding: 2rem; max-width: 400px; width: 100%; text-align: center; border: 1px solid #333;">
-      <div style="font-size: 3rem; margin-bottom: 1rem;">💻</div>
-      <h2 style="color: #fe68ff; margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 700; font-family: 'Space Mono', monospace;">Desktop Recommended</h2>
-      <p style="color: #ccc; margin: 0 0 1.5rem 0; font-size: 0.875rem; line-height: 1.6; font-family: 'Space Mono', monospace;">
-        StreamSlot is designed for desktop browsers. The mobile experience is functional but limited.
+  <div id="mobile-banner" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #1a1a1a; z-index: 99999; padding: 0.75rem 1rem; padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)); border-bottom: 1px solid #333; font-family: 'Space Mono', monospace;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 100%;">
+      <p style="color: #ccc; margin: 0; font-size: 0.75rem; line-height: 1.4; flex: 1;">
+        <span style="color: #fe68ff; font-weight: 700;">Desktop recommended</span> for the best experience. Mobile is functional but limited.
       </p>
-      <button onclick="document.getElementById('mobile-modal').style.display='none'"
-        style="background: #442544; color: #fe68ff; border: none; padding: 0.875rem 1.5rem; border-radius: 0; font-weight: 700; font-size: 0.875rem; cursor: pointer; text-transform: uppercase; width: 100%; font-family: 'Space Mono', monospace; min-height: 2.75rem;">
-        Proceed Anyway
+      <button onclick="document.getElementById('mobile-banner').style.display='none'"
+        style="background: transparent; color: #fe68ff; border: 1px solid #333; padding: 0.375rem 0.75rem; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; font-family: 'Space Mono', monospace; white-space: nowrap; flex-shrink: 0;">
+        Got it
       </button>
     </div>
   </div>
@@ -83,10 +81,10 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Show modal on screens smaller than 600px (mobile/small tablets) -->
+  <!-- Show banner on screens smaller than 600px (mobile/small tablets) -->
   <script>
     if (window.innerWidth < 600) {
-      document.getElementById('mobile-modal').style.display = 'flex';
+      document.getElementById('mobile-banner').style.display = 'block';
     }
   </script>
   
